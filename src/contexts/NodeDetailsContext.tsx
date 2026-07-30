@@ -41,20 +41,27 @@ export const NodeDetailsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const refresh = React.useCallback(() => {
-    fetch("/api/admin/client/list")
-      .then((response) => response.json())
-      .then((data: NodeDetail[]) => {
-        setNodeDetail(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
-        setIsLoading(false);
-      });
+  const refresh = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/admin/client/list");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch node details (${response.status})`);
+      }
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid node details response");
+      }
+      setNodeDetail(data as NodeDetail[]);
+    } catch (error) {
+      setNodeDetail([]);
+      setError(error instanceof Error ? error.message : "Unknown error");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
     React.useEffect(() => {
-        setIsLoading(true);
         refresh();
     }, [refresh]);
   return (

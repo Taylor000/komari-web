@@ -35,36 +35,34 @@ export const PingTaskProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const refresh = () => {
+  const refresh = React.useCallback(async () => {
+    setIsLoading(true);
     setError(null);
-    fetch("/api/admin/ping")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch ping tasks");
-        }
-        return response.json();
-      })
-      .then((resp: Response) => {
-        if (resp && Array.isArray(resp.data)) {
-          setPingTasks(resp.data);
-        } else {
-          setPingTasks([]);
-        }
-      })
-      .catch((err) => {
-        setError(err.message || "An error occurred while fetching ping tasks");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+    try {
+      const response = await fetch("/api/admin/ping");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ping tasks (${response.status})`);
+      }
+      const resp: Response = await response.json();
+      if (!Array.isArray(resp?.data)) {
+        throw new Error("Invalid ping task response");
+      }
+      setPingTasks(resp.data);
+    } catch (error) {
+      setPingTasks([]);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while fetching ping tasks",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
-    setIsLoading(true);
-
     refresh();
-    setIsLoading(false);
-  }, []);
+  }, [refresh]);
 
   return (
     <PingTaskContext.Provider value={{ pingTasks, isLoading, error, refresh }}>
