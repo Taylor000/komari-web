@@ -207,13 +207,9 @@ export default function SiteSettings() {
             value={shareHours}
             type="number"
             onChange={(e) => {
-              try {
-                const val = parseInt(e.target.value);
-                if (!isNaN(val)) {
-                  setShareHours(val);
-                }
-              } catch (err) {
-                // ignore
+              const val = Number.parseInt(e.target.value, 10);
+              if (Number.isFinite(val)) {
+                setShareHours(val);
               }
             }}
           ></SettingCardShortTextInput>

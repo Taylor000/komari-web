@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useLiveData } from "../../contexts/LiveDataContext";
 import { useTranslation } from "react-i18next";
@@ -41,66 +41,53 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 选择第一个可用视图为默认
-  useEffect(() => {
-    if (avaliableView.length > 0) {
-      setHoursView(avaliableView[0].label);
-    }
-  }, [max_record_preserve_time]);
-
   // real-time 总是可用
   // 其余根据 max_record_preserve_time (单位: 小时) 动态生成
   // 4hour, 1day(24h), 7day(168h), 30day(720h)
   // 超过最大预设则显示 "xxx hours"
-  const presetViews = [
-    { label: t("chart.hours", { count: 4 }), hours: 4 },
-    { label: t("chart.days", { count: 1 }), hours: 24 },
-    { label: t("chart.days", { count: 7 }), hours: 168 },
-    { label: t("chart.days", { count: 30 }), hours: 720 },
-  ];
-  const avaliableView: { label: string; hours?: number }[] = [
-    { label: t("common.real_time") },
-  ];
-  if (
-    typeof max_record_preserve_time === "number" &&
-    max_record_preserve_time > 0
-  ) {
-    for (const v of presetViews) {
-      if (max_record_preserve_time >= v.hours) {
-        avaliableView.push({ label: v.label, hours: v.hours });
+  const presetViews = useMemo(
+    () => [
+      { label: t("chart.hours", { count: 4 }), hours: 4 },
+      { label: t("chart.days", { count: 1 }), hours: 24 },
+      { label: t("chart.days", { count: 7 }), hours: 168 },
+      { label: t("chart.days", { count: 30 }), hours: 720 },
+    ],
+    [t],
+  );
+  const avaliableView = useMemo(() => {
+    const views: { label: string; hours?: number }[] = [
+      { label: t("common.real_time") },
+    ];
+    if (max_record_preserve_time <= 0) return views;
+
+    for (const view of presetViews) {
+      if (max_record_preserve_time >= view.hours) {
+        views.push(view);
       }
     }
-    // 如果大于最大预设，显示 "xxx hours"
     const maxPreset = presetViews[presetViews.length - 1];
-    if (max_record_preserve_time > maxPreset.hours) {
-      // 若能被24整除，显示为“xx天”，否则显示为“xx小时”
-      const dynamicLabel =
-        max_record_preserve_time % 24 === 0
-          ? `${t("chart.days", {
-              count: Math.floor(max_record_preserve_time / 24),
-            })}`
-          : `${t("chart.hours", { count: max_record_preserve_time })}`;
-      avaliableView.push({
-        label: dynamicLabel,
-        hours: max_record_preserve_time,
-      });
-    } else if (
-      max_record_preserve_time > 4 &&
-      !presetViews.some((v) => v.hours === max_record_preserve_time)
+    if (
+      max_record_preserve_time > maxPreset.hours ||
+      (max_record_preserve_time > 4 &&
+        !presetViews.some((view) => view.hours === max_record_preserve_time))
     ) {
-      // 如果不是预设但大于4小时，显示具体小时
-      const dynamicLabel =
-        max_record_preserve_time % 24 === 0
-          ? `${t("chart.days", {
-              count: Math.floor(max_record_preserve_time / 24),
-            })}`
-          : `${t("chart.hours", { count: max_record_preserve_time })}`;
-      avaliableView.push({
-        label: dynamicLabel,
+      views.push({
+        label:
+          max_record_preserve_time % 24 === 0
+            ? t("chart.days", {
+                count: Math.floor(max_record_preserve_time / 24),
+              })
+            : t("chart.hours", { count: max_record_preserve_time }),
         hours: max_record_preserve_time,
       });
     }
-  }
+    return views;
+  }, [max_record_preserve_time, presetViews, t]);
+
+  // Select the first valid view when retention or language changes.
+  useEffect(() => {
+    setHoursView(avaliableView[0].label);
+  }, [avaliableView]);
 
   // 新增：根据 hoursView 拉取数据
   useEffect(() => {
@@ -160,24 +147,6 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           (a: RecordFormat, b: RecordFormat) =>
             new Date(a.time).getTime() - new Date(b.time).getTime()
         );
-        // // 根据所选视图推导采样间隔，并对远程数据做瘦身，仅保留绘图需要的点数，避免高频数据占用内存
-        // const selectedHours = selected.hours ?? 24;
-        // const minute = 60; // s
-        // const hour = 60 * 60; // s
-        // // 与下方 chartData 的间隔策略保持一致
-        // const intervalSec =
-        //   selectedHours > 120
-        //     ? hour
-        //     : selectedHours === 4
-        //     ? minute
-        //     : 15 * minute;
-        // const totalSec = selectedHours * 3600;
-        // const maxNeededPoints = Math.max(
-        //   1,
-        //   Math.floor(totalSec / intervalSec) + 2
-        // );
-        // // 只保留末尾需要的数量（避免保留更高频的秒级数据）
-        // const thinned = mergedRecords.slice(-maxNeededPoints);
         setRemoteData(mergedRecords);
         setLoading(false);
       })
@@ -185,7 +154,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         setError(err.message || "Error");
         setLoading(false);
       });
-  }, [hoursView, uuid]);
+  }, [avaliableView, hoursView, uuid]);
 
   // colors
   const colors = ["#F38181", "#FCE38A", "#EAFFD0", "#95E1D3"];

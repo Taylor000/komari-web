@@ -30,7 +30,6 @@ const formatSpeed = (bytes: number): string => {
 };
 
 const Index = () => {
-  const InnerLayout = () => {
     const [t] = useTranslation();
     const { live_data } = useLiveData();
     const [currentTime, setCurrentTime] = React.useState(
@@ -147,7 +146,7 @@ const Index = () => {
         refresh();
       }, 5000);
       return () => clearInterval(interval);
-    }, [nodeList]);
+    }, [refresh]);
 
     if (isLoading) {
       return <Loading />;
@@ -192,8 +191,6 @@ const Index = () => {
         </Suspense>
       </>
     );
-  };
-  return <InnerLayout />;
 };
 
 //#region Callouts

@@ -99,7 +99,7 @@ const Layout = () => {
   useEffect(() => {
     const interval = setInterval(() => { refresh() }, 5000);
     return () => clearInterval(interval);
-  }, [nodeDetail]);
+  }, [refresh]);
 
   if (isLoading) return <Loading text="" />;
   if (error) return <div>{error}</div>;
@@ -407,7 +407,7 @@ const NodeTable = ({
         body: JSON.stringify(orderData),
       });
       // 不再调用 refresh，以免覆盖本地排序
-    } catch (error) {
+    } catch {
       toast.error("Order Failed");
     }
   };

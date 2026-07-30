@@ -27,4 +27,12 @@ export default tseslint.config(
       'prefer-const': 'off',
     },
   },
+  {
+    files: ['src/contexts/**/*.{ts,tsx}', 'src/main.tsx'],
+    rules: {
+      // Context modules intentionally colocate providers and consumer hooks.
+      // The application entry point is not a refresh boundary.
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 )

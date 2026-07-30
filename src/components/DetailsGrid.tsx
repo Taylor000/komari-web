@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { UpDownStack } from "./UpDownStack";
 import { useNodeList } from "@/contexts/NodeListContext";
 import { useLiveData } from "@/contexts/LiveDataContext";
-import { formatUptime } from "./Node";
+import { formatUptime } from "@/utils/unitHelper";
 import { formatBytes } from "@/utils/unitHelper";
 import { Flex, Text, Card } from "@radix-ui/themes";
 

@@ -6,9 +6,7 @@ import { NodeListProvider } from "@/contexts/NodeListContext";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const IndexLayout = () => {
-  // 使用我们的LiveDataContext
-  const InnerLayout = () => {
+const IndexLayoutContent = () => {
     const { publicInfo } = usePublicInfo();
     const isMobile = useIsMobile();
     const bgUrlDesktop = publicInfo?.theme_settings?.backgroundImageUrlDesktop;
@@ -43,15 +41,14 @@ const IndexLayout = () => {
         </div>
       </>
     );
-  };
+};
 
-  return (
+const IndexLayout = () => (
     <LiveDataProvider>
       <NodeListProvider>
-        <InnerLayout />
+        <IndexLayoutContent />
       </NodeListProvider>
     </LiveDataProvider>
-  );
-};
+);
 
 export default IndexLayout;

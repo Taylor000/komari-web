@@ -22,7 +22,6 @@ type LoginDialogProps = {
 };
 
 const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onLoginSuccess }: LoginDialogProps) => {
-  const InnerLayout = () => {
     const { account, loading, error, refresh } = useAccount();
     const [t] = useTranslation();
     const [username, setUsername] = React.useState("");
@@ -39,7 +38,6 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
   const onlyOAuthLogin = oauthEnabled && !passwordLoginEnabled; // 只有 OAuth
   // Validate inputs (仅在启用密码登录时需要)
   const isFormValid = passwordLoginEnabled && username.trim() !== "" && password.trim() !== "";
-    //console.log(autoOpen, open);
     React.useEffect(() => {
       if (autoOpen) {
         setOpen(true);
@@ -252,8 +250,6 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
         </Dialog.Content>
       </Dialog.Root>
     );
-  };
-  return <InnerLayout />;
 };
 
 export default LoginDialog;

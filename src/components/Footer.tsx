@@ -4,8 +4,6 @@ import { useRPC2Call } from "@/contexts/RPC2Context";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 
 const Footer = () => {
-  //const currentYear = new Date().getFullYear();
-
   // 格式化 build 时间
   const formatBuildTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -34,7 +32,6 @@ const Footer = () => {
   useEffect(() => {
     const fetchVersionInfo = async () => {
       try {
-        //const response = await fetch('/api/version');
         const data = await call("common:getVersion");
         setVersionInfo({ hash: data.hash?.slice(0, 7), version: data.version });
       } catch (error) {
@@ -43,7 +40,7 @@ const Footer = () => {
     };
 
     fetchVersionInfo();
-  }, []);
+  }, [call]);
 
   return (
     <div className="footer p-2 border-t-1 border-t-[var(--gray-7)]">

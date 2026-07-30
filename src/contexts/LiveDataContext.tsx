@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import type { LiveDataResponse } from "../types/LiveData";
 import { useRPC2Call } from "./RPC2Context";
 
@@ -27,17 +33,17 @@ export const LiveDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const { call } = useRPC2Call();
 
   // 注册刷新回调函数
-  const onRefresh = (callback: (data: LiveDataResponse) => void) => {
+  const onRefresh = useCallback((callback: (data: LiveDataResponse) => void) => {
     refreshCallbacks.add(callback);
     return () => {
       refreshCallbacks.delete(callback);
     };
-  };
+  }, [refreshCallbacks]);
 
   // 当数据更新时通知所有回调函数
-  const notifyRefreshCallbacks = (data: LiveDataResponse) => {
+  const notifyRefreshCallbacks = useCallback((data: LiveDataResponse) => {
     refreshCallbacks.forEach((callback) => callback(data));
-  };
+  }, [refreshCallbacks]);
 
   // 采用 RPC2 轮询最新状态，替代 WebSocket
   useEffect(() => {
@@ -120,7 +126,7 @@ export const LiveDataProvider: React.FC<{ children: React.ReactNode }> = ({
       stopped = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [call]);
+  }, [call, notifyRefreshCallbacks]);
 
   return (
     <LiveDataContext.Provider value={{ live_data, showCallout, onRefresh }}>

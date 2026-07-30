@@ -57,50 +57,42 @@ const PingChart = ({ uuid }: { uuid: string }) => {
   const { call } = useRPC2Call();
   const max_record_preserve_time = publicInfo?.ping_record_preserve_time || 0;
   // 视图选项
-  const presetViews = [
-    { label: t("chart.hours", { count: 1 }), hours: 1 },
-    { label: t("chart.hours", { count: 6 }), hours: 6 },
-    { label: t("chart.hours", { count: 12 }), hours: 12 },
-    { label: t("chart.days", { count: 1 }), hours: 24 },
-  ];
-  const avaliableView: { label: string; hours?: number }[] = [];
-  if (
-    typeof max_record_preserve_time === "number" &&
-    max_record_preserve_time > 0
-  ) {
-    for (const v of presetViews) {
-      if (max_record_preserve_time >= v.hours) {
-        avaliableView.push({ label: v.label, hours: v.hours });
+  const presetViews = useMemo(
+    () => [
+      { label: t("chart.hours", { count: 1 }), hours: 1 },
+      { label: t("chart.hours", { count: 6 }), hours: 6 },
+      { label: t("chart.hours", { count: 12 }), hours: 12 },
+      { label: t("chart.days", { count: 1 }), hours: 24 },
+    ],
+    [t],
+  );
+  const avaliableView = useMemo(() => {
+    const views: { label: string; hours?: number }[] = [];
+    if (max_record_preserve_time <= 0) return views;
+
+    for (const view of presetViews) {
+      if (max_record_preserve_time >= view.hours) {
+        views.push(view);
       }
     }
     const maxPreset = presetViews[presetViews.length - 1];
-    if (max_record_preserve_time > maxPreset.hours) {
-      const dynamicLabel =
-        max_record_preserve_time % 24 === 0
-          ? `${t("chart.days", {
-              count: Math.floor(max_record_preserve_time / 24),
-            })}`
-          : `${t("chart.hours", { count: max_record_preserve_time })}`;
-      avaliableView.push({
-        label: dynamicLabel,
-        hours: max_record_preserve_time,
-      });
-    } else if (
-      max_record_preserve_time > 1 &&
-      !presetViews.some((v) => v.hours === max_record_preserve_time)
+    if (
+      max_record_preserve_time > maxPreset.hours ||
+      (max_record_preserve_time > 1 &&
+        !presetViews.some((view) => view.hours === max_record_preserve_time))
     ) {
-      const dynamicLabel =
-        max_record_preserve_time % 24 === 0
-          ? `${t("chart.days", {
-              count: Math.floor(max_record_preserve_time / 24),
-            })}`
-          : `${t("chart.hours", { count: max_record_preserve_time })}`;
-      avaliableView.push({
-        label: dynamicLabel,
+      views.push({
+        label:
+          max_record_preserve_time % 24 === 0
+            ? t("chart.days", {
+                count: Math.floor(max_record_preserve_time / 24),
+              })
+            : t("chart.hours", { count: max_record_preserve_time }),
         hours: max_record_preserve_time,
       });
     }
-  }
+    return views;
+  }, [max_record_preserve_time, presetViews, t]);
 
   // 默认视图设为1小时
   const initialView =
@@ -138,7 +130,6 @@ const PingChart = ({ uuid }: { uuid: string }) => {
     }
     setLoading(true);
     setError(null);
-    const controller = new AbortController();
     (async () => {
       try {
         type RpcResp = {
@@ -165,8 +156,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         setLoading(false);
       }
     })();
-    return () => controller.abort();
-  }, [hours, uuid]); // Depend on hours
+  }, [call, hours, uuid]); // Depend on hours
 
   const midData = useMemo(() => {
     // 与 Mini 保持一致：只使用合并抖动后的真实锚点，并截取到最后 hours 窗口范围。
@@ -246,7 +236,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
       });
     }
     return full;
-  }, [remoteData, cutPeak, tasks, hours]);
+  }, [cutPeak, midData, tasks]);
 
   // 时间格式化
   const timeFormatter = (value: any, index: number) => {
@@ -298,7 +288,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
       };
     });
     return config;
-  }, [tasks]);
+  }, [t, tasks]);
 
   const latestValues = useMemo(() => {
     if (!remoteData || !tasks.length) return [];

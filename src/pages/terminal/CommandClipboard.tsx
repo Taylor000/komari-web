@@ -21,8 +21,11 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-const CommandClipboardPanel = ({ ...props }: { [key: string]: any }) => {
-  const InnerLayout = () => {
+const CommandClipboardPanelContent = ({
+  ...props
+}: {
+  [key: string]: any;
+}) => {
     const { t } = useTranslation();
     const { commands, loading, error } = useCommandClipboard();
     if (loading) {
@@ -51,17 +54,19 @@ const CommandClipboardPanel = ({ ...props }: { [key: string]: any }) => {
           <LanguageSwitch />
         </Flex>
 
-        {commands
+        {[...commands]
           .sort((a, b) => b.weight - a.weight)
           .map((item) => (
             <CommandCard key={item.id} {...item} />
           ))}
       </Flex>
     );
-  };
+};
+
+const CommandClipboardPanel = ({ ...props }: { [key: string]: any }) => {
   return (
     <CommandClipboardProvider>
-      <InnerLayout />
+      <CommandClipboardPanelContent {...props} />
     </CommandClipboardProvider>
   );
 };

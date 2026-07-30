@@ -109,3 +109,21 @@ export function formatBytes(bytes: number): string {
     return `${size.toFixed(2)} ${units[unitIndex]}`;
   }
 }
+import type { TFunction } from "i18next";
+
+/** Format node uptime from seconds. */
+export function formatUptime(seconds: number, t: TFunction): string {
+  if (!seconds || seconds < 0) return t("nodeCard.time_second", { val: 0 });
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  const parts: string[] = [];
+  if (days) parts.push(`${days} ${t("nodeCard.time_day")}`);
+  if (hours) parts.push(`${hours} ${t("nodeCard.time_hour")}`);
+  if (minutes) parts.push(`${minutes} ${t("nodeCard.time_minute")}`);
+  if (remainingSeconds || parts.length === 0) {
+    parts.push(`${remainingSeconds} ${t("nodeCard.time_second")}`);
+  }
+  return parts.join(" ");
+}

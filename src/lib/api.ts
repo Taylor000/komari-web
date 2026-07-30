@@ -34,7 +34,10 @@ export async function getSettings(): Promise<SettingsResponse> {
     const data = await response.json();
 
     // Remove database metadata fields that are not needed for UI
-    const { CreatedAt, UpdatedAt, id, ...settings } = data["data"];
+    const settings = { ...data["data"] };
+    delete settings.CreatedAt;
+    delete settings.UpdatedAt;
+    delete settings.id;
 
     return settings as SettingsResponse;
   } catch (error) {
@@ -61,15 +64,10 @@ export async function updateSettings(
     });
 
     if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        console.log("Error response data:", errorData.message);
-        throw new Error(
-          `${errorData['message']}`
-        );
-      } catch (jsonError) {
-        throw jsonError
-      }
+      const errorData = await response.json().catch(() => null);
+      throw new Error(
+        errorData?.message || `HTTP error! status: ${response.status}`
+      );
     }
   } catch (error) {
     console.error("Failed to update settings:", error);

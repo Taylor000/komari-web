@@ -13,7 +13,7 @@ import {
   Callout,
   Separator,
 } from "@radix-ui/themes";
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Upload,
   Settings,
@@ -124,7 +124,7 @@ const ThemePage = () => {
 
   const loading = themesLoading || settingsLoading || !currentTheme;
   // 获取主题列表
-  const fetchThemes = async () => {
+  const fetchThemes = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/theme/list");
       if (!response.ok) {
@@ -145,7 +145,7 @@ const ThemePage = () => {
     } finally {
       setThemesLoading(false);
     }
-  };
+  }, [currentTheme]);
 
   // 上传主题
   const uploadTheme = async (file: File) => {
@@ -264,7 +264,6 @@ const ThemePage = () => {
       );
 
       const theme = themes.find((t) => t.short === themeShort);
-      console.log(theme);
       if (theme && theme.configuration && theme.configuration.data) {
         window.location.reload();
       }
@@ -415,7 +414,7 @@ const ThemePage = () => {
   // 同步活跃状态
   useEffect(() => {
     fetchThemes();
-  }, [currentTheme]);
+  }, [currentTheme, fetchThemes]);
 
   useEffect(() => {
     if (!settingsLoading && themes.length > 0) {

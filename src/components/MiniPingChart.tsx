@@ -28,9 +28,6 @@ interface TaskInfo {
   p50?: number;
   p99_p50_ratio?: number;
 }
-// 移除旧 REST 类型，改用 RPC2 返回结构
-
-//const MAX_POINTS = 1000;
 const colors = [
   "#F38181",
   "#347433",
@@ -82,7 +79,7 @@ const MiniPingChart = ({
         setLoading(false);
       }
     })();
-  }, [uuid, hours]);
+  }, [call, uuid, hours]);
 
   const chartData = useMemo(() => {
     // 思路：仅保留真实采样时间点（各任务原始时间点的并集），
@@ -173,7 +170,7 @@ const MiniPingChart = ({
       };
     });
     return config;
-  }, [tasks]);
+  }, [t, tasks]);
 
   const handleLegendClick = useCallback((e: any) => {
     const key = e.dataKey;

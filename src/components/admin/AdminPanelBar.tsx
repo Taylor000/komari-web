@@ -9,7 +9,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion"; // 引入 Framer Motion
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation /*useNavigate*/ } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import menuConfig from "../../config/menuConfig.json";
 import type { MenuItem } from "../../types/menu";
@@ -47,7 +47,6 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
   const [t, i18n] = useTranslation();
   const location = useLocation();
   const { publicInfo } = usePublicInfo();
-  //const navigate = useNavigate();
   // 获取版本信息
   const [versionInfo, setVersionInfo] = useState<{
     hash: string;
@@ -105,11 +104,10 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     return () => {
       ignore = true;
     };
-  }, [currentTheme]);
+  }, [currentLanguage, currentTheme, t]);
   useEffect(() => {
     const fetchVersionInfo = async () => {
       try {
-        //const response = await fetch("/api/version");
         const data = await call("common:getVersion");
         setVersionInfo({
           hash: data.hash?.slice(0, 7),
@@ -121,7 +119,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     };
 
     fetchVersionInfo();
-  }, []);
+  }, [call]);
 
   // Handle responsive behavior
   useEffect(() => {

@@ -273,7 +273,6 @@ export function DataTable() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(orderObj),
           });
-          console.log("提交的顺序:", JSON.stringify(orderObj));
           return updatedData;
         });
       }

@@ -46,8 +46,7 @@ export default function InstancePage() {
       if (offlineServerPosition === "First") {
         if (!aIsOnline && bIsOnline) return -1;
         if (aIsOnline && !bIsOnline) return 1;
-      } else if (offlineServerPosition === "Keep") {
-      } else {
+      } else if (offlineServerPosition !== "Keep") {
         if (aIsOnline && !bIsOnline) return -1;
         if (!aIsOnline && bIsOnline) return 1;
       }
@@ -141,7 +140,7 @@ export default function InstancePage() {
 
     // 清理订阅
     return unsubscribe;
-  }, [onRefresh, uuid]);
+  }, [length, onRefresh, uuid]);
   // #region 布局
   return (
     <div className="flex flex-row justify-center p-4 gap-4">

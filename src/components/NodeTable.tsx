@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import type { LiveData, Record } from "../types/LiveData";
-import { formatUptime } from "./Node";
+import { formatUptime } from "@/utils/unitHelper";
 import { formatBytes } from "@/utils/unitHelper";
 import UsageBar from "./UsageBar";
 import Flag from "./Flag";
@@ -135,8 +135,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
       if (offlineServerPosition === "First") {
         if (!aOnline && bOnline) return -1;
         if (aOnline && !bOnline) return 1;
-      } else if (offlineServerPosition === "Keep") {
-      } else {
+      } else if (offlineServerPosition !== "Keep") {
         if (aOnline && !bOnline) return -1;
         if (!aOnline && bOnline) return 1;
       }
@@ -158,7 +157,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
       case "cpu":
         comparison = aData.cpu.usage - bData.cpu.usage;
         break;
-      case "ram":
+      case "ram": {
         const aRamPercent = a.mem_total
           ? (aData.ram.used / a.mem_total) * 100
           : 0;
@@ -167,7 +166,8 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
           : 0;
         comparison = aRamPercent - bRamPercent;
         break;
-      case "disk":
+      }
+      case "disk": {
         const aDiskPercent = a.disk_total
           ? (aData.disk.used / a.disk_total) * 100
           : 0;
@@ -176,6 +176,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
           : 0;
         comparison = aDiskPercent - bDiskPercent;
         break;
+      }
       case "price":
         comparison = a.price - b.price;
         break;

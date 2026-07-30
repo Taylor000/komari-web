@@ -32,7 +32,10 @@ interface ThemeConfigResponse {
 const ThemeManaged: React.FC = () => {
   const { publicInfo, refresh } = usePublicInfo();
   const theme = publicInfo?.theme;
-  const themeSettings = publicInfo?.theme_settings || {}; // 当前值
+  const themeSettings = useMemo(
+    () => publicInfo?.theme_settings || {},
+    [publicInfo?.theme_settings],
+  ); // 当前值
   const { t, i18n } = useTranslation();
 
   const currentLanguage =
@@ -115,8 +118,6 @@ const ThemeManaged: React.FC = () => {
 
   const saveAll = async () => {
     if (!theme) return;
-    console.log("保存前的 values:", values);
-    console.log("保存前的 payload:", payload);
     setSaving(true);
     try {
       const resp = await fetch(
