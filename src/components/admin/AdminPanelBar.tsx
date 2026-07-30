@@ -267,6 +267,8 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
             initial="closed"
             animate={sidebarOpen ? "open" : "closed"}
             exit="closed"
+            aria-hidden={!sidebarOpen}
+            inert={!sidebarOpen}
             style={{
               backgroundColor: "var(--accent-1)",
               height: "100%",
@@ -274,6 +276,8 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
               zIndex: isMobile ? 10 : 1,
               overflowY: "auto",
               overflowX: "hidden",
+              pointerEvents: sidebarOpen ? "auto" : "none",
+              visibility: isMobile && !sidebarOpen ? "hidden" : "visible",
             }}
           >
             <Flex
@@ -364,33 +368,10 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
                             className="p-2 gap-2 border-l-[4px] border-transparent cursor-pointer hover:bg-accent-3 rounded-md"
                             align="center"
                             onClick={() => {
-                              //const currentlyOpen = openSubMenus[item.path];
-                              // 检查当前路径是否已经在该父菜单的子菜单中
-                              //const isCurrentlyInThisMenu = item.children?.some(
-                              //  (child) =>
-                              //    location.pathname === child.path ||
-                              //    location.pathname.startsWith(child.path)
-                              //);
-
-                              // 切换子菜单的展开状态
                               setOpenSubMenus((prev) => ({
                                 ...prev,
                                 [item.path]: !prev[item.path],
                               }));
-
-                              //// 只有在非展开状态且不在当前菜单组中时才导航到第一个子菜单项
-                              //if (
-                              //  !currentlyOpen &&
-                              //  !isCurrentlyInThisMenu &&
-                              //  item.children &&
-                              //  item.children.length > 0
-                              //) {
-                              //  //navigate(item.children[0].path);
-                              //  // 如果是移动端，关闭侧边栏
-                              //  if (isMobile) {
-                              //    setSidebarOpen(false);
-                              //  }
-                              //}
                             }}
                           >
                             {renderIcon(
