@@ -59,6 +59,9 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
   const downloadSpeed = formatBytes(liveData.network.down);
   const totalUpload = formatBytes(liveData.network.totalUp);
   const totalDownload = formatBytes(liveData.network.totalDown);
+  const cpuName = basic.cpu_name?.trim() || "CPU";
+  const cpuCoreLabel = basic.cpu_cores > 0 ? `x${basic.cpu_cores}` : "";
+  const cpuDetails = cpuCoreLabel ? `${cpuName} (${cpuCoreLabel})` : cpuName;
   //const totalTraffic = formatBytes(liveData.network.totalUp + liveData.network.totalDown);
   return (
     <Card
@@ -157,6 +160,17 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
           <Flex className="md:flex-col flex-row md:gap-1 gap-4">
             {/* CPU Usage */}
             <UsageBar label={t("nodeCard.cpu")} value={liveData.cpu.usage} />
+            <Text
+              as="div"
+              className="md:block hidden"
+              size="1"
+              color="gray"
+              truncate
+              title={cpuDetails}
+              style={{ marginTop: "-4px", minWidth: 0 }}
+            >
+              ({cpuDetails})
+            </Text>
 
             {/* Memory Usage */}
             <UsageBar label={t("nodeCard.ram")} value={memoryUsagePercent} />
@@ -181,6 +195,34 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
               ({formatBytes(liveData.disk.used)} /{" "}
               {formatBytes(basic.disk_total)})
             </Text>
+          </Flex>
+          <Flex
+            justify="between"
+            align="center"
+            gap="2"
+            className="md:hidden -mt-1"
+            hidden={!isMobile}
+            style={{ minWidth: 0 }}
+          >
+            <Text
+              size="1"
+              color="gray"
+              truncate
+              title={cpuDetails}
+              style={{ minWidth: 0 }}
+            >
+              {cpuName}
+            </Text>
+            {cpuCoreLabel && (
+              <Text
+                size="1"
+                color="gray"
+                weight="medium"
+                style={{ flex: "none" }}
+              >
+                {cpuCoreLabel}
+              </Text>
+            )}
           </Flex>
           {basic.traffic_limit > 0 ? (
             <Flex justify="between" hidden={isMobile} direction="column">

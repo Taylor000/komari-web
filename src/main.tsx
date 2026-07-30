@@ -1,4 +1,4 @@
-import React, { StrictMode, useMemo } from "react";
+import React, { useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import "./global.css";
 import { Theme } from "@radix-ui/themes";
@@ -20,13 +20,42 @@ import { useRoutes } from "react-router-dom";
 import { routes } from "./routes";
 import Loading from "./components/loading";
 import { PublicInfoProvider } from "./contexts/PublicInfoContext";
-import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
-import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { Toaster } from "./components/ui/sonner";
 import { RPC2Provider } from "./contexts/RPC2Context";
+import { AccountProvider } from "./contexts/AccountContext";
+
+const retireLegacyServiceWorker = async () => {
+  const marker = "komari:legacy-sw-retired-v1";
+
+  try {
+    if (localStorage.getItem(marker)) return;
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations.map((registration) => registration.unregister()),
+      );
+    }
+    if ("caches" in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames
+          .filter(
+            (name) => name.startsWith("workbox-") || name === "api-cache",
+          )
+          .map((name) => caches.delete(name)),
+      );
+    }
+    localStorage.setItem(marker, "1");
+  } catch (error) {
+    console.warn("Unable to retire the legacy offline cache:", error);
+  }
+};
+
 const App = () => {
   React.useEffect(() => {
+    void retireLegacyServiceWorker();
+
     const params = new URLSearchParams(window.location.search);
     const tempKey = params.get("temp_key");
 
@@ -77,11 +106,11 @@ const App = () => {
         >
           <RPC2Provider>
             <PublicInfoProvider>
-              <Toaster />
-              <OfflineIndicator />
-              {routing}
-              <PWAInstallPrompt />
-              <PWAUpdatePrompt />
+              <AccountProvider>
+                <Toaster />
+                <OfflineIndicator />
+                {routing}
+              </AccountProvider>
             </PublicInfoProvider>
           </RPC2Provider>
         </Theme>
@@ -92,10 +121,8 @@ const App = () => {
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
-    <StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </ErrorBoundary>,
 );

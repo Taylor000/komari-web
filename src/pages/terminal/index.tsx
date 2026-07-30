@@ -13,7 +13,6 @@ import CommandClipboardPanel from "@/pages/terminal/CommandClipboard";
 import { Toaster } from "@/components/ui/sonner";
 import { TerminalContext } from "@/contexts/TerminalContext";
 import { motion } from "framer-motion";
-import throttle from "lodash/throttle";
 interface TerminalAreaProps {
   terminalRef: React.RefObject<HTMLDivElement | null>;
   toggleClipboard: () => void;
@@ -74,6 +73,7 @@ const TerminalPage = () => {
   const draggingRef = useRef(false);
   const fitAddonRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const moveFrameRef = useRef<number | null>(null);
 
   // 使用 useCallback 确保 resizeTerminal 引用稳定
   const resizeTerminal = useCallback(() => {
@@ -108,29 +108,28 @@ const TerminalPage = () => {
     }
   }, [resizeTerminal]);
 
-  // 限制resize onMouseMove 调用频率
   const onMouseMove = useCallback(
-    throttle((e: MouseEvent | TouchEvent) => {
-      if (!draggingRef.current || !containerRef.current) return;
+    (event: MouseEvent | TouchEvent) => {
+      if (moveFrameRef.current !== null) return;
+      const clientX =
+        event instanceof MouseEvent ? event.clientX : event.touches[0]?.clientX;
+      if (clientX === undefined) return;
 
-      const containerRect = containerRef.current.getBoundingClientRect();
-      let clientX: number;
+      moveFrameRef.current = window.requestAnimationFrame(() => {
+        moveFrameRef.current = null;
+        if (!draggingRef.current || !containerRef.current) return;
 
-      if (e instanceof MouseEvent) {
-        clientX = e.clientX;
-      } else {
-        clientX = e.touches[0].clientX;
-      }
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const newLeftWidth = clientX - containerRect.left;
+        const minWidth = 300;
+        const maxWidth = containerRect.width - 300;
 
-      const newLeftWidth = clientX - containerRect.left;
-      const minWidth = 300;
-      const maxWidth = containerRect.width - 300;
-
-      if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
-        setLeftWidth(newLeftWidth);
-      }
-    }, 1000 / 60), // （60fps）
-    []
+        if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
+          setLeftWidth(newLeftWidth);
+        }
+      });
+    },
+    [],
   );
 
   useEffect(() => {
@@ -144,7 +143,10 @@ const TerminalPage = () => {
       document.removeEventListener("mouseup", stopDragging);
       document.removeEventListener("touchmove", onMouseMove);
       document.removeEventListener("touchend", stopDragging);
-      onMouseMove.cancel(); // 清理 throttle
+      if (moveFrameRef.current !== null) {
+        window.cancelAnimationFrame(moveFrameRef.current);
+        moveFrameRef.current = null;
+      }
     };
   }, [onMouseMove, stopDragging]);
 

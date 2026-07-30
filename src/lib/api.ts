@@ -108,7 +108,7 @@ export async function updateSingleSetting<K extends keyof SettingsResponse>(
 /**
  * Hook for managing settings state and API calls
  */
-export function useSettings() {
+export function useSettings(enabled = true) {
   const [settings, setSettings] = React.useState<SettingsResponse>({
     sitename: "",
     description: "",
@@ -127,6 +127,8 @@ export function useSettings() {
 
   // Fetch settings on mount
   React.useEffect(() => {
+    if (!enabled) return;
+
     const fetchSettings = async () => {
       setLoading(true);
       setError(null);
@@ -143,7 +145,7 @@ export function useSettings() {
     };
 
     fetchSettings();
-  }, []);
+  }, [enabled]);
 
   // Update a single setting
   const updateSetting = async <K extends keyof SettingsResponse>(

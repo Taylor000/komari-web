@@ -567,9 +567,11 @@
       "smtp_username": "Username",
       "telegram": {
         "bot_token": "Telegram Bot Token",
-        "chat_id": "Chat ID",
+        "chat_id": "Recipient ID (User / Chat ID)",
         "endpoint": "Request Endpoint",
-        "endpoint_help": "Request endpoint for the Telegram Bot API, usually `https://api.telegram.org/bot`"
+        "endpoint_help": "Request endpoint for the Telegram Bot API, usually `https://api.telegram.org/bot`",
+        "message_thread_id": "Topic ID (optional)",
+        "message_thread_id_help": "Only used for Telegram supergroups with topics enabled; leave blank for private chats and regular groups"
       },
       "telegram_bot_token": "Telegram Bot Token",
       "telegram_chat_id_error": "Chat ID must be a number",

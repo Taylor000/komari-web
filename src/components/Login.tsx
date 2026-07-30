@@ -10,7 +10,7 @@ import {
 } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import { TablerSettings } from "./Icones/Tabler";
-import { AccountProvider, useAccount } from "@/contexts/AccountContext";
+import { useAccount } from "@/contexts/AccountContext";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 
 type LoginDialogProps = {
@@ -253,11 +253,7 @@ const LoginDialog = ({ trigger, autoOpen = false, showSettings = true, info, onL
       </Dialog.Root>
     );
   };
-  return (
-    <AccountProvider>
-      <InnerLayout />
-    </AccountProvider>
-  );
+  return <InnerLayout />;
 };
 
 export default LoginDialog;

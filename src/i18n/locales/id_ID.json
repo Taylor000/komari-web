@@ -567,9 +567,11 @@
       "smtp_username": "Nama Pengguna",
       "telegram": {
         "bot_token": "Token Bot Telegram",
-        "chat_id": "ID Chat",
+        "chat_id": "ID Penerima (User / Chat ID)",
         "endpoint": "Endpoint Permintaan",
-        "endpoint_help": "Endpoint permintaan untuk API Bot Telegram, biasanya `https://api.telegram.org/bot`"
+        "endpoint_help": "Endpoint permintaan untuk API Bot Telegram, biasanya `https://api.telegram.org/bot`",
+        "message_thread_id": "ID Topik (opsional)",
+        "message_thread_id_help": "Hanya digunakan untuk supergrup Telegram dengan topik aktif; kosongkan untuk chat pribadi dan grup biasa"
       },
       "telegram_bot_token": "Token Bot Telegram",
       "telegram_chat_id_error": "ID Chat harus berupa angka",

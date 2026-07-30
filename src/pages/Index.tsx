@@ -3,9 +3,6 @@ import {
   Card,
   Flex,
   Text,
-  Popover,
-  IconButton,
-  Switch,
 } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
 import React, { useEffect, Suspense } from "react";
@@ -14,7 +11,6 @@ import { formatBytes } from "@/utils/unitHelper";
 import { useLiveData } from "../contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
 import Loading from "@/components/loading";
-import { Settings } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 // Intelligent speed formatting function
@@ -53,7 +49,7 @@ const Index = () => {
     }, []);
 
     // Status cards visibility state
-    const [statusCardsVisibility, setStatusCardsVisibility] = useLocalStorage(
+    const [statusCardsVisibility] = useLocalStorage(
       "statusCardsVisibility",
       {
         currentTime: true,
@@ -165,39 +161,7 @@ const Index = () => {
     return (
       <>
         <Callouts />
-        <Card className="summary-card mx-4 md:text-base text-sm relative">
-          <div className="absolute top-2 right-2">
-            <Popover.Root>
-              <Popover.Trigger>
-                <IconButton variant="ghost" size="1">
-                  <Settings size={16} />
-                </IconButton>
-              </Popover.Trigger>
-              <Popover.Content width="300px">
-                <Flex direction="column" gap="3">
-                  <Text size="2" weight="bold">
-                    {t("status_settings")}
-                  </Text>
-                  <Flex direction="column" gap="2">
-                    {statusCards.map((card) => (
-                      <StatusSettingSwitch
-                        key={card.key}
-                        label={card.title}
-                        checked={card.visible}
-                        onCheckedChange={(checked) =>
-                          setStatusCardsVisibility({
-                            ...statusCardsVisibility,
-                            [card.key]: checked,
-                          })
-                        }
-                      />
-                    ))}
-                  </Flex>
-                </Flex>
-              </Popover.Content>
-            </Popover.Root>
-          </div>
-
+        <Card className="summary-card mx-4 md:text-base text-sm">
           {(() => {
             return (
               <div
@@ -304,23 +268,6 @@ const TopCard: React.FC<TopCardProps> = React.memo(
           )}
         </Flex>
       </div>
-    );
-  },
-);
-
-type StatusSettingSwitchProps = {
-  label: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-};
-
-const StatusSettingSwitch: React.FC<StatusSettingSwitchProps> = React.memo(
-  ({ label, checked, onCheckedChange }) => {
-    return (
-      <Flex justify="between" align="center">
-        <Text size="2">{label}</Text>
-        <Switch checked={checked} onCheckedChange={onCheckedChange} />
-      </Flex>
     );
   },
 );

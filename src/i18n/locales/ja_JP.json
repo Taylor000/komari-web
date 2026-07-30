@@ -567,9 +567,11 @@
       "smtp_username": "ユーザー名",
       "telegram": {
         "bot_token": "Telegramボットトークン",
-        "chat_id": "チャットID",
+        "chat_id": "受信者ID（ユーザー / チャットID）",
         "endpoint": "リクエストエンドポイント",
-        "endpoint_help": "Telegram ボット API のリクエストエンドポイント、通常は `https://api.telegram.org/bot`"
+        "endpoint_help": "Telegram ボット API のリクエストエンドポイント、通常は `https://api.telegram.org/bot`",
+        "message_thread_id": "トピックID（任意）",
+        "message_thread_id_help": "トピックを有効にしたTelegramスーパーグループでのみ使用します。個人チャットや通常のグループでは空欄にしてください"
       },
       "telegram_bot_token": "Telegram ボットトークン",
       "telegram_chat_id_error": "チャット ID は空にできません",
