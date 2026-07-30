@@ -38,11 +38,10 @@ interface NodeDetailsContextType {
 const NodeDetailsContext = React.createContext<NodeDetailsContextType | undefined>(undefined);
 export const NodeDetailsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [nodeDetail, setNodeDetail] = React.useState<NodeDetail[] | []>([]);
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
 
   const refresh = React.useCallback(async () => {
-    setIsLoading(true);
     setError(null);
     try {
       const response = await fetch("/api/admin/client/list");
