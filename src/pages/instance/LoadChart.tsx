@@ -157,10 +157,15 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
   }, [avaliableView, hoursView, uuid]);
 
   // colors
-  const colors = ["#F38181", "#FCE38A", "#EAFFD0", "#95E1D3"];
+  const colors = [
+    "var(--chart-series-1)",
+    "var(--chart-series-2)",
+    "var(--chart-series-3)",
+    "var(--chart-series-4)",
+  ];
   const primaryColor = colors[0];
   const secondaryColor = colors[1];
-  const cn = "max-w-72 min-w-72 flex flex-col w-full h-full gap-4";
+  const cn = "instance-load-chart-card flex flex-col w-full";
   const chartMargin = {
     top: 0,
     right: 16,
@@ -248,10 +253,10 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
     <Flex
       direction="column"
       align="center"
-      gap="4"
-      className="w-full max-w-screen"
+      gap="2"
+      className="instance-load-chart w-full max-w-screen"
     >
-      <div className="w-full overflow-x-auto px-2">
+      <div className="instance-load-range w-full overflow-x-auto">
         <div className="w-max mx-auto">
           <SegmentedControl.Root value={hoursView} onValueChange={setHoursView}>
             {avaliableView.map((view) => (
@@ -279,12 +284,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           {error}
         </div>
       )}
-      <div
-        className="gap-2 grid w-full justify-items-center mx-auto max-w-[900px]"
-        style={{
-          gridTemplateColumns: "repeat(auto-fit, minmax(288px, 1fr))",
-        }}
-      >
+      <div className="instance-load-chart-grid grid w-full mx-auto">
         {/* CPU */}
         <Card className={cn}>
           {ChartTitle(

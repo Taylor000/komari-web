@@ -10,9 +10,8 @@ import { useTranslation } from "react-i18next";
 import { Cross1Icon } from "@radix-ui/react-icons";
 import { TablerAlertTriangleFilled } from "../../components/Icones/Tabler";
 import CommandClipboardPanel from "@/pages/terminal/CommandClipboard";
-import { Toaster } from "@/components/ui/sonner";
 import { TerminalContext } from "@/contexts/TerminalContext";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 interface TerminalAreaProps {
   terminalRef: React.RefObject<HTMLDivElement | null>;
   toggleClipboard: () => void;
@@ -336,7 +335,6 @@ const TerminalPage = () => {
       value={{ terminal: terminalInstance.current, sendCommand }}
     >
       <Theme appearance="dark">
-        <Toaster theme="dark" />
         <div className="absolute inset-x-0 top-4 flex justify-center items-center z-30">
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.95 }}

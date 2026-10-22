@@ -21,8 +21,8 @@ import PriceTags from "./PriceTags";
 import Tips from "./ui/tips";
 import { DetailsGrid } from "./DetailsGrid";
 import MiniPingChart from "./MiniPingChart";
-import { getOSImage } from "@/utils";
-import { usePublicInfo } from "@/contexts/PublicInfoContext";
+import { getOSImage } from "@/utils/osImageHelper";
+import { compareNodesByAdminOrder } from "@/utils/nodeOrder";
 
 interface NodeTableProps {
   nodes: NodeBasicInfo[];
@@ -50,9 +50,6 @@ interface SortState {
 
 const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
   const [t] = useTranslation();
-  const { publicInfo } = usePublicInfo();
-  const offlineServerPosition =
-    publicInfo?.theme_settings?.offlineServerPosition;
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [sortState, setSortState] = useState<SortState>({
     field: null,
@@ -129,17 +126,9 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
     const aData = getNodeData(a.uuid);
     const bData = getNodeData(b.uuid);
 
-    // 如果没有排序字段或为默认排序，使用原来的排序逻辑
+    // 默认顺序始终继承后台分组和服务器自定义排序。
     if (!sortState.field || sortState.order === "default") {
-      // 遵循后台离线节点位置设置（First/Keep/Last），再按权重排序
-      if (offlineServerPosition === "First") {
-        if (!aOnline && bOnline) return -1;
-        if (aOnline && !bOnline) return 1;
-      } else if (offlineServerPosition !== "Keep") {
-        if (aOnline && !bOnline) return -1;
-        if (!aOnline && bOnline) return 1;
-      }
-      return a.weight - b.weight;
+      return compareNodesByAdminOrder(a, b);
     }
 
     // 自定义排序逻辑
@@ -380,6 +369,8 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
                     <img
                       src={getOSImage(node.os)}
                       alt={node.os}
+                      loading="lazy"
+                      decoding="async"
                       className="w-5 h-5 mr-2"
                     />
                   </TableCell>
@@ -430,6 +421,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
                       price={node.price}
                       billing_cycle={node.billing_cycle}
                       expired_at={node.expired_at}
+                      auto_renewal={node.auto_renewal}
                       currency={node.currency}
                       gap="1"
                       tags={node.tags || ""}

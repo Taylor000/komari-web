@@ -1,8 +1,8 @@
-import LoginDialog from "./Login";
 import { IconButton } from "@radix-ui/themes";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { Link } from "react-router-dom";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
+import LoginDialog from "./Login";
 import { useTranslation } from "react-i18next";
 const NavBar = () => {
   const { publicInfo } = usePublicInfo();
@@ -27,7 +27,7 @@ const NavBar = () => {
           <GitHubLogoIcon />
         </IconButton>
 
-        {publicInfo?.private_site && !document.cookie.includes("temp_key") ? (
+        {publicInfo?.private_site && !document.cookie.includes("temp_key") && (
           <LoginDialog
             autoOpen={
               publicInfo?.private_site && !document.cookie.includes("temp_key")
@@ -37,8 +37,6 @@ const NavBar = () => {
               window.location.reload();
             }}
           />
-        ) : (
-          <LoginDialog />
         )}
       </div>
     </nav>

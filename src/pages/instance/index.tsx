@@ -12,6 +12,8 @@ import PingChart from "./PingChart";
 import { DetailsGrid } from "@/components/DetailsGrid";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { compareNodesByAdminOrder } from "@/utils/nodeOrder";
+import Loading from "@/components/loading";
 
 export default function InstancePage() {
   const { t } = useTranslation();
@@ -24,39 +26,20 @@ export default function InstancePage() {
   const [chartView, setChartView] = useState<"load" | "ping">("load");
   // #region 初始数据加载
   const node = nodeList?.find((n) => n.uuid === uuid);
-  const { publicInfo } = usePublicInfo();
+  const isOnline = Boolean(uuid && live_data?.data.online.includes(uuid));
+  const { publicInfo, error: publicInfoError } = usePublicInfo();
   const isMobile = useIsMobile();
   const showServerListInDetails =
     publicInfo?.theme_settings?.showServerListInDetails === true;
-  const offlineServerPosition =
-    publicInfo?.theme_settings?.offlineServerPosition;
+  const showServerSidebar = showServerListInDetails && !isMobile;
 
-  // 组织按分组的服务器列表
+  // 详情页列表与后台分组、服务器自定义顺序保持一致。
   const groupedNodes = useMemo(() => {
     if (!nodeList) return [];
 
-    const onlineNodes = live_data?.data?.online ?? [];
-    const sortNodes = (
-      a: (typeof nodeList)[number],
-      b: (typeof nodeList)[number],
-    ) => {
-      const aIsOnline = onlineNodes.includes(a.uuid);
-      const bIsOnline = onlineNodes.includes(b.uuid);
-
-      if (offlineServerPosition === "First") {
-        if (!aIsOnline && bIsOnline) return -1;
-        if (aIsOnline && !bIsOnline) return 1;
-      } else if (offlineServerPosition !== "Keep") {
-        if (aIsOnline && !bIsOnline) return -1;
-        if (!aIsOnline && bIsOnline) return 1;
-      }
-
-      return a.weight - b.weight;
-    };
-
     const groups = new Map<string | null, typeof nodeList>();
 
-    nodeList.forEach((node) => {
+    [...nodeList].sort(compareNodesByAdminOrder).forEach((node) => {
       const groupKey = node.group && node.group.trim() ? node.group : null;
       if (!groups.has(groupKey)) {
         groups.set(groupKey, []);
@@ -64,31 +47,11 @@ export default function InstancePage() {
       groups.get(groupKey)?.push(node);
     });
 
-    // 转换为数组，其中未分组的排在最后
-    const result: Array<{ group: string | null; nodes: typeof nodeList }> = [];
-
-    // 先添加有分组的（按分组名称排序）
-    Array.from(groups.entries())
-      .filter(([group]) => group !== null)
-      .sort(([a], [b]) => (a ?? "").localeCompare(b ?? ""))
-      .forEach(([group, nodes]) => {
-        result.push({
-          group,
-          nodes: [...nodes].sort(sortNodes),
-        });
-      });
-
-    // 再添加未分组的
-    const ungrouped = groups.get(null);
-    if (ungrouped) {
-      result.push({
-        group: null,
-        nodes: [...ungrouped].sort(sortNodes),
-      });
-    }
-
-    return result;
-  }, [nodeList, live_data, offlineServerPosition]);
+    return Array.from(groups.entries()).map(([group, nodes]) => ({
+      group,
+      nodes,
+    }));
+  }, [nodeList]);
 
   useEffect(() => {
     if (!uuid) {
@@ -142,12 +105,24 @@ export default function InstancePage() {
     return unsubscribe;
   }, [length, onRefresh, uuid]);
   // #region 布局
+  // The sidebar setting comes from /api/public. Do not render the detail grid
+  // into an unknown column while that layout preference is still loading.
+  if (!publicInfo && !publicInfoError) {
+    return (
+      <div className="instance-page-loading" aria-busy="true">
+        <Loading />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-row justify-center p-4 gap-4">
-      {showServerListInDetails && !isMobile && (
-        <div className="w-[300px] shrink-0 self-start sticky top-4">
+    <div
+      className={`instance-page${showServerSidebar ? " instance-page--with-sidebar" : ""}`}
+    >
+      {showServerSidebar && (
+        <aside className="instance-sidebar">
           <Card
-            className="w-full overflow-hidden shadow-lg"
+            className="instance-sidebar-card"
             style={{ height: "calc(100vh - 2rem)" }}
           >
             <Flex direction="column" gap="0" className="h-full min-h-0">
@@ -202,47 +177,50 @@ export default function InstancePage() {
               </div>
             </Flex>
           </Card>
-        </div>
+        </aside>
       )}
-      <div className="flex flex-col h-full items-center gap-2">
-        <div className="flex flex-col gap-1 md:p-4 p-3 border-0 rounded-md">
-          <h1 className="flex items-center flex-wrap">
-            <Flag flag={node?.region ?? ""} />
-            <Text size="3" weight="bold" wrap="nowrap">
-              {node?.name ?? uuid}
-            </Text>
-            <Text
-              size="1"
-              style={{
-                marginLeft: "8px",
-              }}
-              className="text-accent-6"
-              wrap="nowrap"
+      <main className="instance-main">
+        <section className="instance-heading-card">
+          <header className="instance-heading">
+            <div className="instance-identity">
+              <span className="instance-flag" aria-hidden="true">
+                <Flag flag={node?.region ?? ""} />
+              </span>
+              <div className="instance-identity-copy">
+                <h1 className="instance-name">{node?.name ?? uuid}</h1>
+                <span className="instance-uuid">{node?.uuid}</span>
+              </div>
+            </div>
+            <span
+              className={`instance-status instance-status--${isOnline ? "online" : "offline"}`}
             >
-              {node?.uuid}
-            </Text>
-          </h1>
+              <span className="instance-status-dot" aria-hidden="true" />
+              {isOnline ? t("nodeCard.online") : t("nodeCard.offline")}
+            </span>
+          </header>
           <DetailsGrid box align="center" uuid={uuid ?? ""} />
+        </section>
+        <div className="instance-chart-switcher">
+          <SegmentedControl.Root
+            radius="full"
+            value={chartView}
+            onValueChange={(value) => setChartView(value as "load" | "ping")}
+          >
+            <SegmentedControl.Item value="load">
+              {t("nodeCard.load")}
+            </SegmentedControl.Item>
+            <SegmentedControl.Item value="ping">
+              {t("nodeCard.ping")}
+            </SegmentedControl.Item>
+          </SegmentedControl.Root>
         </div>
-        <SegmentedControl.Root
-          radius="full"
-          value={chartView}
-          onValueChange={(value) => setChartView(value as "load" | "ping")}
-        >
-          <SegmentedControl.Item value="load">
-            {t("nodeCard.load")}
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="ping">
-            {t("nodeCard.ping")}
-          </SegmentedControl.Item>
-        </SegmentedControl.Root>
         {/* Recharts */}
         {chartView === "load" ? (
           <LoadChart data={liveDataToRecords(uuid ?? "", recent)} />
         ) : (
           <PingChart uuid={uuid ?? ""} />
         )}
-      </div>
+      </main>
     </div>
   );
 }

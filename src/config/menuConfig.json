@@ -2,86 +2,91 @@
   "menu": [
     {
       "labelKey": "common.server",
-      "path": "/admin",
+      "path": "/kidding",
       "icon": "Server"
     },
     {
+      "labelKey": "serverGroups.title",
+      "path": "/kidding/server-groups",
+      "icon": "Layers3"
+    },
+    {
+      "labelKey": "subscriptions.manageTitle",
+      "path": "/kidding/subscriptions",
+      "icon": "ReceiptText"
+    },
+    {
       "labelKey": "settings.title",
-      "path": "/admin/settings",
+      "path": "/kidding/settings",
       "icon": "Bolt",
       "children": [
         {
           "labelKey": "settings.site.title",
-          "path": "/admin/settings/site",
+          "path": "/kidding/settings/site",
           "icon": "Home"
         },
         {
           "labelKey": "theme.title",
-          "path": "/admin/settings/theme",
+          "path": "/kidding/settings/theme",
           "icon": "Palette"
         },
         {
           "labelKey": "settings.sign_on.title",
-          "path": "/admin/settings/sign-on",
+          "path": "/kidding/settings/sign-on",
           "icon": "CircleArrowRight"
         },
         {
           "labelKey": "settings.notification.title",
-          "path": "/admin/settings/notification",
+          "path": "/kidding/settings/notification",
           "icon": "MessageCircleMore"
         },
         {
           "labelKey": "settings.general.title",
-          "path": "/admin/settings/general",
+          "path": "/kidding/settings/general",
           "icon": "Ellipsis"
         }
       ]
     },
     {
       "labelKey": "notification.title",
-      "path": "/admin/notification",
+      "path": "/kidding/notification",
       "icon": "Bell",
       "children": [
         {
           "labelKey": "notification.offline.title",
-          "path": "/admin/notification/offline",
+          "path": "/kidding/notification/offline",
           "icon": "Unplug"
         },
         {
           "labelKey": "notification.load.title",
-          "path": "/admin/notification/load",
+          "path": "/kidding/notification/load",
           "icon": "TrendingUp"
         },
         {
           "labelKey": "settings.general.title",
-          "path": "/admin/notification/general",
+          "path": "/kidding/notification/general",
           "icon": "Ellipsis"
         }
       ]
     },
     {
-      "labelKey": "exec.title",
-      "path": "/admin/exec",
-      "icon": "Code"
-    },
-    {
       "labelKey": "ping.title",
-      "path": "/admin/ping",
+      "path": "/kidding/ping",
       "icon": "Activity"
     },
     {
       "labelKey": "sessions.title",
-      "path": "/admin/sessions",
+      "path": "/kidding/sessions",
       "icon": "Users"
     },
     {
       "labelKey": "account.title",
-      "path": "/admin/account",
+      "path": "/kidding/account",
       "icon": "UserCircle"
     },
     {
       "labelKey": "logs.title",
-      "path": "/admin/logs",
+      "path": "/kidding/logs",
       "icon": "FileText"
     },
     {

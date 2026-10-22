@@ -8,27 +8,28 @@ const routeImporters: Record<string, RouteImporter> = {
   "/": () => import("./pages/Index"),
   "/_layout": () => import("./pages/_layout"),
   "/instance/:uuid": () => import("./pages/instance"),
-  "/admin": () => import("./pages/admin"),
-  "/admin/_layout": () => import("./pages/admin/_layout"),
-  "/admin/theme_managed": () => import("./pages/admin/theme_managed"),
-  "/admin/sessions": () => import("./pages/admin/sessions"),
-  "/admin/account": () => import("./pages/admin/account"),
-  "/admin/settings": () => import("./pages/admin/settings/_layout"),
-  "/admin/settings/site": () => import("./pages/admin/settings/site"),
-  "/admin/settings/theme": () => import("./pages/admin/settings/theme"),
-  "/admin/settings/custom": () => import("./pages/admin/settings/custom"),
-  "/admin/settings/sign-on": () => import("./pages/admin/settings/sign-on"),
-  "/admin/settings/notification": () =>
+  "/kidding": () => import("./pages/admin"),
+  "/kidding/server-groups": () => import("./pages/admin/serverGroups"),
+  "/kidding/subscriptions": () => import("./pages/admin/subscriptions"),
+  "/kidding/_layout": () => import("./pages/admin/_layout"),
+  "/kidding/theme_managed": () => import("./pages/admin/theme_managed"),
+  "/kidding/sessions": () => import("./pages/admin/sessions"),
+  "/kidding/account": () => import("./pages/admin/account"),
+  "/kidding/settings": () => import("./pages/admin/settings/_layout"),
+  "/kidding/settings/site": () => import("./pages/admin/settings/site"),
+  "/kidding/settings/theme": () => import("./pages/admin/settings/theme"),
+  "/kidding/settings/custom": () => import("./pages/admin/settings/custom"),
+  "/kidding/settings/sign-on": () => import("./pages/admin/settings/sign-on"),
+  "/kidding/settings/notification": () =>
     import("./pages/admin/settings/notification"),
-  "/admin/settings/general": () => import("./pages/admin/settings/general"),
-  "/admin/notification/offline": () =>
+  "/kidding/settings/general": () => import("./pages/admin/settings/general"),
+  "/kidding/notification/offline": () =>
     import("./pages/admin/notification/offline"),
-  "/admin/notification/load": () => import("./pages/admin/notification/load"),
-  "/admin/notification/general": () =>
+  "/kidding/notification/load": () => import("./pages/admin/notification/load"),
+  "/kidding/notification/general": () =>
     import("./pages/admin/notification/general"),
-  "/admin/ping": () => import("./pages/admin/pingTask"),
-  "/admin/logs": () => import("./pages/admin/log"),
-  "/admin/exec": () => import("./pages/admin/exec"),
+  "/kidding/ping": () => import("./pages/admin/pingTask"),
+  "/kidding/logs": () => import("./pages/admin/log"),
   "/terminal": () => import("./pages/terminal"),
   "/manage": () => import("./pages/manage"),
   "/404": () => import("./pages/404"),
@@ -65,11 +66,11 @@ export function preloadRoute(path: string) {
   const pathname = path.split(/[?#]/, 1)[0].replace(/\/+$/, "") || "/";
   const imports: RouteImporter[] = [];
 
-  if (pathname.startsWith("/admin")) {
-    imports.push(routeImporters["/admin/_layout"]);
+  if (pathname.startsWith("/kidding")) {
+    imports.push(routeImporters["/kidding/_layout"]);
   }
-  if (pathname.startsWith("/admin/settings/")) {
-    imports.push(routeImporters["/admin/settings"]);
+  if (pathname.startsWith("/kidding/settings/")) {
+    imports.push(routeImporters["/kidding/settings"]);
   }
   if (routeImporters[pathname]) {
     imports.push(routeImporters[pathname]);
@@ -81,24 +82,25 @@ export function preloadRoute(path: string) {
 const Index = lazyRoute("/");
 const PublicLayout = lazyRoute("/_layout");
 const Instance = lazyRoute("/instance/:uuid");
-const AdminLayout = lazyRoute("/admin/_layout");
-const Admin = lazyRoute("/admin");
-const ThemeManaged = lazyRoute("/admin/theme_managed");
-const Sessions = lazyRoute("/admin/sessions");
-const Account = lazyRoute("/admin/account");
-const SettingsLayout = lazyRoute("/admin/settings");
-const SiteSettings = lazyRoute("/admin/settings/site");
-const ThemeSettings = lazyRoute("/admin/settings/theme");
-const CustomSettings = lazyRoute("/admin/settings/custom");
-const SignOnSettings = lazyRoute("/admin/settings/sign-on");
-const NotificationSettings = lazyRoute("/admin/settings/notification");
-const GeneralSettings = lazyRoute("/admin/settings/general");
-const OfflineNotification = lazyRoute("/admin/notification/offline");
-const LoadNotification = lazyRoute("/admin/notification/load");
-const GeneralNotification = lazyRoute("/admin/notification/general");
-const Ping = lazyRoute("/admin/ping");
-const Logs = lazyRoute("/admin/logs");
-const Exec = lazyRoute("/admin/exec");
+const AdminLayout = lazyRoute("/kidding/_layout");
+const Admin = lazyRoute("/kidding");
+const ServerGroups = lazyRoute("/kidding/server-groups");
+const Subscriptions = lazyRoute("/kidding/subscriptions");
+const ThemeManaged = lazyRoute("/kidding/theme_managed");
+const Sessions = lazyRoute("/kidding/sessions");
+const Account = lazyRoute("/kidding/account");
+const SettingsLayout = lazyRoute("/kidding/settings");
+const SiteSettings = lazyRoute("/kidding/settings/site");
+const ThemeSettings = lazyRoute("/kidding/settings/theme");
+const CustomSettings = lazyRoute("/kidding/settings/custom");
+const SignOnSettings = lazyRoute("/kidding/settings/sign-on");
+const NotificationSettings = lazyRoute("/kidding/settings/notification");
+const GeneralSettings = lazyRoute("/kidding/settings/general");
+const OfflineNotification = lazyRoute("/kidding/notification/offline");
+const LoadNotification = lazyRoute("/kidding/notification/load");
+const GeneralNotification = lazyRoute("/kidding/notification/general");
+const Ping = lazyRoute("/kidding/ping");
+const Logs = lazyRoute("/kidding/logs");
 const Terminal = lazyRoute("/terminal");
 const Manage = lazyRoute("/manage");
 const NotFound = lazyRoute("/404");
@@ -116,10 +118,18 @@ export const routes: RouteObject[] = [
     ],
   },
   {
-    path: "/admin",
+    path: "/kidding",
     element: React.createElement(AdminLayout),
     children: [
       { index: true, element: React.createElement(Admin) },
+      {
+        path: "server-groups",
+        element: React.createElement(ServerGroups),
+      },
+      {
+        path: "subscriptions",
+        element: React.createElement(Subscriptions),
+      },
       {
         path: "theme_managed",
         element: React.createElement(ThemeManaged),
@@ -157,7 +167,6 @@ export const routes: RouteObject[] = [
       },
       { path: "ping", element: React.createElement(Ping) },
       { path: "logs", element: React.createElement(Logs) },
-      { path: "exec", element: React.createElement(Exec) },
     ],
   },
   {

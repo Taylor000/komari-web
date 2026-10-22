@@ -1,11 +1,13 @@
 import { Badge, Flex } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import AutoRenewalBadge from "./AutoRenewalBadge";
 
 const PriceTags = ({
   price = 0,
   billing_cycle = 30,
   currency = "￥",
   expired_at = Date.now() + 30 * 24 * 60 * 60 * 1000,
+  auto_renewal,
   tags = "",
   ip4 = "",
   ip6 = "",
@@ -14,16 +16,21 @@ const PriceTags = ({
   expired_at?: string | number;
   price?: number;
   billing_cycle?: number;
+  auto_renewal?: boolean;
   currency?: string;
   tags?: string;
   ip4?: any;
   ip6?: any;
 } & React.ComponentProps<typeof Flex>) => {
   const [t] = useTranslation();
+  const renewalBadge = auto_renewal === undefined
+    ? null
+    : <AutoRenewalBadge enabled={auto_renewal} />;
 
   if (price == 0) {
     return (
       <Flex gap="1" {...props} wrap="wrap">
+        {renewalBadge}
         <CustomTags tags={tags} />
       </Flex>
     );
@@ -31,24 +38,24 @@ const PriceTags = ({
   return (
     <Flex gap="1" {...props} wrap="wrap">
       {ip4 && (
-        <Badge size="1" variant="soft" className="text-sm" color="green">
+        <Badge size="1" variant="soft" className="text-sm" color="gray">
           <label className="flex justify-center items-center gap-1 text-xs">
-            <div className="border-2 rounded-4xl border-green-500"></div>
+            <div className="border-2 rounded-4xl border-gray-500"></div>
             V4
           </label>
         </Badge>
       )}
 
       {ip6 && (
-        <Badge size="1" variant="soft" className="text-sm" color="green">
+        <Badge size="1" variant="soft" className="text-sm" color="gray">
           <label className="flex justify-center items-center gap-1 text-xs">
-            <div className="border-2 rounded-4xl border-green-500"></div>
+            <div className="border-2 rounded-4xl border-gray-500"></div>
             V6
           </label>
         </Badge>
       )}
 
-      <Badge color="iris" size="1" variant="soft" className="text-sm">
+      <Badge color="gray" size="1" variant="soft" className="text-sm">
         <label className="text-xs">
           {price == -1 ? t("common.free") : `${currency}${price}`}/
           {(() => {
@@ -86,7 +93,7 @@ const PriceTags = ({
           } else if (diffDays <= 15) {
             return "orange";
           } else {
-            return "green";
+            return "gray";
           }
         })()}
         size="1"
@@ -113,6 +120,7 @@ const PriceTags = ({
           })()}
         </label>
       </Badge>
+      {renewalBadge}
       <CustomTags tags={tags} />
     </Flex>
   );
@@ -197,7 +205,7 @@ const CustomTags = ({ tags }: { tags?: string }) => {
     <>
       {tagList.map((tag, index) => {
         const { text, color } = parseTagWithColor(tag);
-        const badgeColor = color || colors[index % colors.length];
+        const badgeColor = color || "gray";
 
         return (
           <Badge

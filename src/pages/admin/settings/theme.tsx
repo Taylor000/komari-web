@@ -446,7 +446,7 @@ const ThemePage = () => {
             <Button
               variant="soft"
               className="gap-2"
-              onClick={() => navigate("/admin/theme_managed")}
+              onClick={() => navigate("/kidding/theme_managed")}
             >
               <Settings size={16} />
               {`${currentTheme}设置`}

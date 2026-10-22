@@ -1,4 +1,3 @@
-import LanguageSwitch from "@/components/Language";
 import Loading from "@/components/loading";
 import {
   CommandClipboardProvider,
@@ -49,9 +48,8 @@ const CommandClipboardPanelContent = ({
             {t("command_clipboard.title")}
           </label>
         </Flex>
-        <Flex justify="between" align="center" className="mr-2">
+        <Flex justify="start" align="center" className="mr-2">
           <AddButton />
-          <LanguageSwitch />
         </Flex>
 
         {[...commands]

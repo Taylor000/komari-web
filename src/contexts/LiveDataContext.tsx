@@ -96,6 +96,8 @@ export const LiveDataProvider: React.FC<{ children: React.ReactNode }> = ({
             process: rec.process ?? 0,
             message: "",
             updated_at: rec.time ?? 0,
+            ping:
+              rec.ping && typeof rec.ping === "object" ? rec.ping : {},
           };
         }
 

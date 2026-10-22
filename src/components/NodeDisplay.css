@@ -1,7 +1,7 @@
 /* 表格滚动条美化 */
 .node-table-container {
   scrollbar-width: thin;
-  scrollbar-color: var(--accent-7) var(--accent-3);
+  scrollbar-color: var(--gray-a7) var(--gray-a3);
 }
 
 .node-table-container::-webkit-scrollbar {
@@ -10,18 +10,18 @@
 }
 
 .node-table-container::-webkit-scrollbar-track {
-  background: var(--accent-3);
+  background: var(--gray-a3);
   border-radius: 3px;
 }
 
 .node-table-container::-webkit-scrollbar-thumb {
-  background: var(--accent-7);
+  background: var(--gray-a7);
   border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 .node-table-container::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-9);
+  background: var(--gray-a9);
 }
 
 /* 搜索框清除按钮的悬停效果 */
@@ -37,6 +37,346 @@
 /* 视图切换按钮的过渡效果 */
 .view-switch-button {
   transition: all 0.2s ease;
+}
+
+.group-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  overflow: hidden;
+  padding: 0.58rem 0.7rem;
+  border: 1px solid var(--gray-a5);
+  border-radius: 0.9rem;
+  background: var(--color-panel-solid, var(--card));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 0.18rem 0.45rem rgb(15 23 42 / 0.05);
+}
+
+.group-panel-header,
+.group-panel-heading,
+.group-panel-heading-copy {
+  display: flex;
+  align-items: center;
+}
+
+.group-panel-header {
+  justify-content: space-between;
+  padding: 0;
+}
+
+.group-panel-heading {
+  min-width: 0;
+  gap: 0.45rem;
+}
+
+.group-panel-heading-copy {
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.group-panel-icon {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.55rem;
+  color: var(--gray-11);
+  background: var(--gray-a3);
+  box-shadow: inset 0 0 0 1px var(--gray-a4);
+}
+
+.group-options-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.1rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-a6) transparent;
+  overscroll-behavior-inline: contain;
+}
+
+.group-options-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.group-options-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--gray-a6);
+}
+
+.group-options {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.group-option {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  padding: 0.32rem 0.45rem 0.32rem 0.65rem;
+  border: 1px solid var(--gray-a5);
+  border-radius: 999px;
+  color: var(--gray-11);
+  background: rgb(255 255 255 / 0.58);
+  box-shadow: 0 1px 1px rgb(15 23 42 / 0.025);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 550;
+  line-height: 1;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.group-option-label {
+  max-width: min(18rem, 50vw);
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-align: left;
+  white-space: normal;
+}
+
+/* 系统筛选是固定入口，不能像用户自定义的长分组名一样被压缩省略。 */
+.group-option--fixed {
+  min-width: max-content;
+  flex: 0 0 auto;
+}
+
+.group-option--fixed .group-option-label {
+  max-width: none;
+  flex: 0 0 auto;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.expiring-summary {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--orange-a5);
+  border-radius: 0.8rem;
+  background: var(--orange-a2);
+}
+
+.group-option-count {
+  display: grid;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding: 0 0.3rem;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--gray-11);
+  background: var(--gray-a3);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .group-option:not(.is-active):hover {
+    border-color: var(--gray-a7);
+    color: var(--gray-12);
+    background: var(--gray-a3);
+    box-shadow: 0 4px 10px rgb(15 23 42 / 0.055);
+    transform: translateY(-1px);
+  }
+}
+
+.group-option:focus-visible {
+  outline: 2px solid var(--gray-9);
+  outline-offset: 2px;
+}
+
+.group-option.is-active {
+  border-color: var(--gray-12);
+  color: var(--gray-1);
+  background: var(--gray-12);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 4px 12px rgb(15 23 42 / 0.12);
+}
+
+.group-option.is-active .group-option-count {
+  color: var(--gray-1);
+  background: rgb(255 255 255 / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.group-summary {
+  display: flex;
+  align-items: stretch;
+  grid-column: 1 / -1;
+  gap: 0.65rem;
+  margin-top: 0;
+  padding: 0.55rem;
+  border: 1px solid var(--gray-a4);
+  border-radius: 0.9rem;
+  background: var(--gray-a2);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
+}
+
+.group-summary-identity {
+  display: flex;
+  min-width: 9rem;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 1rem;
+  border-right: 1px solid var(--gray-a5);
+}
+
+.group-summary-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.group-summary-title .rt-Text {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.group-summary-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--gray-11);
+  box-shadow: 0 0 0 3px var(--gray-a4);
+}
+
+.group-summary-metrics {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.group-summary-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.12rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.65rem;
+  background: var(--gray-a2);
+}
+
+.dark .group-panel {
+  border-color: var(--gray-a5);
+  background: var(--color-panel-solid, var(--card));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
+    0 0.22rem 0.5rem rgb(0 0 0 / 0.18);
+}
+
+.dark .group-option {
+  border-color: var(--gray-a5);
+  color: var(--gray-11);
+  background: rgb(255 255 255 / 0.045);
+}
+
+.dark .group-option.is-active {
+  border-color: var(--gray-12);
+  color: var(--gray-1);
+  background: var(--gray-12);
+}
+
+.dark .group-summary {
+  background: rgb(255 255 255 / 0.035);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+@media (max-width: 720px) {
+  .group-panel {
+    display: block;
+    margin-right: 0.75rem !important;
+    margin-left: 0.75rem !important;
+    padding: 0.55rem 0.6rem;
+    border-radius: 0.9rem;
+  }
+
+  .group-panel-header {
+    padding-bottom: 0.32rem;
+  }
+
+  .group-options-scroll {
+    margin-right: -0.6rem;
+    margin-left: -0.6rem;
+    padding-right: 0.6rem;
+    padding-bottom: 0.25rem;
+    padding-left: 0.6rem;
+  }
+
+  .group-options {
+    width: max-content;
+    flex-wrap: nowrap;
+  }
+
+  .group-option {
+    min-height: 2.3rem;
+    flex: 0 0 auto;
+    padding: 0.4rem 0.48rem 0.4rem 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  .group-option-label {
+    max-width: min(13rem, 65vw);
+  }
+
+  .group-summary {
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.38rem;
+    padding: 0.45rem;
+  }
+
+  .group-summary-identity {
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-right: 0;
+    padding-bottom: 0.38rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--gray-a5);
+  }
+
+  .group-summary-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .group-summary-metric {
+    padding: 0.38rem 0.42rem;
+  }
+
+  .group-summary-metric .whitespace-nowrap {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-option {
+    transition: none;
+  }
 }
 
 /* 表格行的过渡效果 */

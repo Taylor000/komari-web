@@ -182,7 +182,7 @@ const NotificationSettings = () => {
       <label className="text-muted-foreground text-sm flex flex-row items-center gap-1">
         {t("settings.notification.moved")}
         <Link
-          to="/admin/notification/general"
+          to="/kidding/notification/general"
         >
           <SquareArrowOutUpRight size={16} />
         </Link>

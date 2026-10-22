@@ -13,7 +13,6 @@ const AdminContent = () => {
   const location = useLocation();
   const loggedIn = account?.logged_in === true;
   const { settings, loading } = useSettings(loggedIn);
-  const lang = localStorage.getItem("i18nextLng") || "en";
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -21,12 +20,11 @@ const AdminContent = () => {
       setOpen(false);
     } else if (
       settings &&
-      !settings.eula_accepted &&
-      lang.startsWith("zh")
+      !settings.eula_accepted
     ) {
       setOpen(true);
     }
-  }, [lang, loading, loggedIn, settings]);
+  }, [loading, loggedIn, settings]);
 
   const content = loggedIn ? (
     <Suspense

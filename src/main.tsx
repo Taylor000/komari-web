@@ -1,15 +1,14 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { createRoot } from "react-dom/client";
 import "./global.css";
 import { Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
+// Instance layout is critical on hard refresh. Keep it in the entry CSS bundle
+// so the lazy route cannot render before its two-column layout is available.
+import "./pages/instance/Instance.css";
 import {
-  ThemeContext,
-  THEME_DEFAULTS,
-  type Appearance,
-  type Colors,
-} from "./contexts/ThemeContext";
-import { useLocalStorage } from "./hooks/useLocalStorage";
+  CUSTOM_THEME,
+} from "./theme";
 import { useSystemTheme } from "./hooks/useSystemTheme";
 import { BrowserRouter } from "react-router-dom";
 // Ensure i18n is initialized before any component renders
@@ -56,6 +55,11 @@ const App = () => {
   React.useEffect(() => {
     void retireLegacyServiceWorker();
 
+    localStorage.removeItem("i18nextLng");
+    localStorage.removeItem("appearance");
+    localStorage.removeItem("color");
+    document.cookie = "i18next=; path=/; max-age=0; SameSite=Lax";
+
     const params = new URLSearchParams(window.location.search);
     const tempKey = params.get("temp_key");
 
@@ -69,52 +73,30 @@ const App = () => {
       );
     }
   }, []);
-  const [appearance, setAppearance] = useLocalStorage<Appearance>(
-    "appearance",
-    THEME_DEFAULTS.appearance,
-  );
-  const [color, setColor] = useLocalStorage<Colors>(
-    "color",
-    THEME_DEFAULTS.color,
-  );
-
-  // Use the system theme hook to resolve "system" to actual theme
-  const resolvedAppearance = useSystemTheme(appearance);
-
-  const themeContextValue = useMemo(
-    () => ({
-      appearance,
-      setAppearance,
-      color,
-      setColor,
-    }),
-    [appearance, setAppearance, color, setColor],
-  );
+  const resolvedAppearance = useSystemTheme();
   const routing = useRoutes(routes);
   return (
     <Suspense fallback={<Loading />}>
-      <ThemeContext.Provider value={themeContextValue}>
-        <Theme
-          appearance={resolvedAppearance}
-          accentColor={color}
-          scaling="110%"
-          className="theme-root"
-          style={{
-            backgroundColor: "transparent",
-            minHeight: "100vh",
-          }}
-        >
-          <RPC2Provider>
-            <PublicInfoProvider>
-              <AccountProvider>
-                <Toaster />
-                <OfflineIndicator />
-                {routing}
-              </AccountProvider>
-            </PublicInfoProvider>
-          </RPC2Provider>
-        </Theme>
-      </ThemeContext.Provider>
+      <Theme
+        appearance={resolvedAppearance}
+        accentColor={CUSTOM_THEME.color}
+        scaling="110%"
+        className="theme-root"
+        style={{
+          backgroundColor: "transparent",
+          minHeight: "100vh",
+        }}
+      >
+        <RPC2Provider>
+          <PublicInfoProvider>
+            <AccountProvider>
+              <Toaster />
+              <OfflineIndicator />
+              {routing}
+            </AccountProvider>
+          </PublicInfoProvider>
+        </RPC2Provider>
+      </Theme>
     </Suspense>
   );
 };

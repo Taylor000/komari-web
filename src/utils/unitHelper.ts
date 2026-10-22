@@ -109,21 +109,41 @@ export function formatBytes(bytes: number): string {
     return `${size.toFixed(2)} ${units[unitIndex]}`;
   }
 }
+
+/** Format a byte-per-second value with compact, adaptive precision. */
+export function formatSpeed(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B/s";
+
+  const units = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s", "PB/s"];
+  const unitIndex = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  const size = bytes / Math.pow(1024, unitIndex);
+
+  let decimals = 2;
+  if (unitIndex >= 3) decimals = 1;
+  if (unitIndex <= 1 || size >= 100) decimals = 0;
+
+  return `${size.toFixed(decimals)} ${units[unitIndex]}`;
+}
 import type { TFunction } from "i18next";
 
 /** Format node uptime from seconds. */
 export function formatUptime(seconds: number, t: TFunction): string {
-  if (!seconds || seconds < 0) return t("nodeCard.time_second", { val: 0 });
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return `0${t("nodeCard.time_second")}`;
+  }
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
   const parts: string[] = [];
-  if (days) parts.push(`${days} ${t("nodeCard.time_day")}`);
-  if (hours) parts.push(`${hours} ${t("nodeCard.time_hour")}`);
-  if (minutes) parts.push(`${minutes} ${t("nodeCard.time_minute")}`);
+  if (days) parts.push(`${days}${t("nodeCard.time_day")}`);
+  if (hours) parts.push(`${hours}${t("nodeCard.time_hour")}`);
+  if (minutes) parts.push(`${minutes}${t("nodeCard.time_minute")}`);
   if (remainingSeconds || parts.length === 0) {
-    parts.push(`${remainingSeconds} ${t("nodeCard.time_second")}`);
+    parts.push(`${remainingSeconds}${t("nodeCard.time_second")}`);
   }
-  return parts.join(" ");
+  return parts.join("");
 }

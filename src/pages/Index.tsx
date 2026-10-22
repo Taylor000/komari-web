@@ -1,33 +1,25 @@
 import {
   Callout,
-  Card,
   Flex,
   Text,
 } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
-import React, { useEffect, Suspense } from "react";
-const NodeDisplay = React.lazy(() => import("../components/NodeDisplay"));
-import { formatBytes } from "@/utils/unitHelper";
+import React, { useEffect } from "react";
+import {
+  Activity,
+  ChartNoAxesCombined,
+  Clock3,
+  MapPin,
+  Server,
+  type LucideIcon,
+} from "lucide-react";
+import NodeDisplay from "../components/NodeDisplay";
+import { formatBytes, formatSpeed } from "@/utils/unitHelper";
 import { useLiveData } from "../contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
 import Loading from "@/components/loading";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-
-// Intelligent speed formatting function
-const formatSpeed = (bytes: number): string => {
-  if (bytes === 0) return "0 B/s";
-  const units = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  const size = bytes / Math.pow(1024, i);
-
-  // Adaptive decimal places
-  let decimals = 2;
-  if (i >= 3) decimals = 1; // GB and above: 1 decimal
-  if (i <= 1) decimals = 0; // B and KB: no decimals
-  if (size >= 100) decimals = 0; // 100+ of any unit: no decimals
-
-  return `${size.toFixed(decimals)} ${units[i]}`;
-};
+import "./Index.css";
 
 const Index = () => {
     const [t] = useTranslation();
@@ -66,6 +58,8 @@ const Index = () => {
         title: t("current_time"),
         getValue: () => currentTime,
         visible: statusCardsVisibility.currentTime,
+        icon: Clock3,
+        tone: "time" as const,
       },
       {
         key: "currentOnline",
@@ -73,6 +67,8 @@ const Index = () => {
         getValue: () =>
           `${live_data?.data?.online.length ?? 0} / ${nodeList?.length ?? 0}`,
         visible: statusCardsVisibility.currentOnline,
+        icon: Server,
+        tone: "online" as const,
       },
       {
         key: "regionOverview",
@@ -92,6 +88,8 @@ const Index = () => {
               ).length
             : 0,
         visible: statusCardsVisibility.regionOverview,
+        icon: MapPin,
+        tone: "region" as const,
       },
       {
         key: "trafficOverview",
@@ -115,6 +113,8 @@ const Index = () => {
           return `↑ ${formatBytes(up)} / ↓ ${formatBytes(down)}`;
         },
         visible: statusCardsVisibility.trafficOverview,
+        icon: ChartNoAxesCombined,
+        tone: "traffic" as const,
       },
       {
         key: "networkSpeed",
@@ -138,6 +138,8 @@ const Index = () => {
           return `↑ ${formatSpeed(up)} / ↓ ${formatSpeed(down)}`;
         },
         visible: statusCardsVisibility.networkSpeed,
+        icon: Activity,
+        tone: "speed" as const,
       },
     ];
 
@@ -160,35 +162,33 @@ const Index = () => {
     return (
       <>
         <Callouts />
-        <Card className="summary-card mx-4 md:text-base text-sm">
-          {(() => {
-            return (
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: `repeat(auto-fit, minmax(230px, 1fr))`,
-                  gridAutoRows: "min-content",
-                }}
-              >
-                {statusCards
-                  .filter((card) => card.visible)
-                  .map((card) => (
-                    <TopCard
-                      key={card.key}
-                      title={card.title}
-                      value={card.getValue()}
-                    />
-                  ))}
-              </div>
-            );
-          })()}
-        </Card>
-        <Suspense fallback={<div style={{ padding: 16 }}>Loading…</div>}>
-          <NodeDisplay
-            nodes={nodeList ?? []}
-            liveData={live_data?.data ?? { online: [], data: {} }}
-          />
-        </Suspense>
+        <section
+          className="global-summary mx-4"
+          aria-label={t("global_overview", { defaultValue: "全局概览" })}
+        >
+          <div className="summary-stat-grid">
+            {statusCards
+              .filter((card) => card.visible)
+              .map((card) => (
+                <TopCard
+                  key={card.key}
+                  cardKey={card.key}
+                  title={card.title}
+                  value={card.getValue()}
+                  icon={card.icon}
+                  tone={card.tone}
+                  showOnlineIndicator={
+                    card.key === "currentOnline" &&
+                    (live_data?.data?.online.length ?? 0) > 0
+                  }
+                />
+              ))}
+          </div>
+        </section>
+        <NodeDisplay
+          nodes={nodeList ?? []}
+          liveData={live_data?.data ?? { online: [], data: {} }}
+        />
       </>
     );
 };
@@ -246,24 +246,28 @@ const Callouts = () => {
 export default Index;
 
 type TopCardProps = {
+  cardKey: string;
   title: string;
   value: string | number;
-  description?: string;
+  icon: LucideIcon;
+  tone: "time" | "online" | "region" | "traffic" | "speed";
+  showOnlineIndicator?: boolean;
 };
 
 const TopCard: React.FC<TopCardProps> = React.memo(
-  ({ title, value, description }) => {
+  ({ cardKey, title, value, icon: Icon, tone, showOnlineIndicator }) => {
     return (
-      <div className="min-w-52 md:max-w-72 w-full">
-        <Flex direction="column" gap="1">
-          <label className="text-muted-foreground text-sm">{title}</label>
-          <label className="font-medium -mt-2 text-md">{value}</label>
-          {description && (
-            <Text size="2" color="gray">
-              {description}
-            </Text>
-          )}
-        </Flex>
+      <div
+        className={`summary-stat summary-stat--${tone} summary-stat--${cardKey}`}
+      >
+        <div className="summary-stat-icon" aria-hidden="true">
+          <Icon size={20} strokeWidth={1.8} />
+          {showOnlineIndicator && <span className="summary-online-dot" />}
+        </div>
+        <div className="summary-stat-content">
+          <span className="summary-stat-label">{title}</span>
+          <span className="summary-stat-value">{value}</span>
+        </div>
       </div>
     );
   },

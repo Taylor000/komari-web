@@ -5,7 +5,7 @@ const ManagePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("/admin", { replace: true });
+    navigate("/kidding", { replace: true });
   }, [navigate]);
 
   return (
@@ -16,7 +16,7 @@ const ManagePage = () => {
       </p>
       <p>
         If you are looking for the admin panel, please go to{" "}
-        <a href="/admin">/admin</a>.
+        <a href="/kidding">/kidding</a>.
       </p>
     </div>
   );

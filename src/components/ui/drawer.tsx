@@ -5,8 +5,8 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 import { Theme } from "@radix-ui/themes";
-import { ThemeContext as AppThemeContext } from "@/contexts/ThemeContext";
 import { useSystemTheme } from "@/hooks/useSystemTheme";
+import { CUSTOM_THEME } from "@/theme";
 function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
@@ -52,15 +52,14 @@ function DrawerContent({
   children,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
-  const { appearance, color } = React.useContext(AppThemeContext);
-  const resolvedAppearance = useSystemTheme(appearance);
+  const resolvedAppearance = useSystemTheme();
 
   return (
     <DrawerPortal data-slot="drawer-portal">
       {" "}
       <Theme
         appearance={resolvedAppearance}
-        accentColor={color}
+        accentColor={CUSTOM_THEME.color}
       >
         <DrawerOverlay />
         <DrawerPrimitive.Content

@@ -91,7 +91,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
         const item: ExtendedMenuItem = {
           labelKey: rawLabel,
           rawLabel,
-          path: "/admin/theme_managed",
+          path: "/kidding/theme_managed",
           icon,
         };
         setExtraMenuItems([item]);
@@ -529,7 +529,7 @@ const SidebarItem = ({
     !isExternalLink &&
     to !== "/" &&
     (location.pathname === to ||
-      (to !== "/admin" && location.pathname.startsWith(to)));
+      (to !== "/kidding" && location.pathname.startsWith(to)));
   const openInNewTab = newTab === true || (isExternalLink && newTab !== false);
 
   if (openInNewTab) {

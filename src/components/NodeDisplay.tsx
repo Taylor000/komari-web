@@ -4,9 +4,16 @@ import {
   Text,
   IconButton,
   TextField,
-  SegmentedControl,
 } from "@radix-ui/themes";
-import { Search, Grid3X3, Table2, X } from "lucide-react";
+import {
+  CalendarClock,
+  Search,
+  Grid3X3,
+  Layers3,
+  ReceiptText,
+  Table2,
+  X,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
@@ -14,9 +21,37 @@ import type { LiveData } from "../types/LiveData";
 import { NodeGrid } from "./Node";
 const NodeTable = React.lazy(() => import("./NodeTable"));
 import { isRegionMatch } from "@/utils/regionHelper";
+import { formatBytes, formatSpeed } from "@/utils/unitHelper";
+import Loading from "./loading";
+import { compareNodesByAdminOrder } from "@/utils/nodeOrder";
+import SubscriptionDisplay, { getRemainingDays } from "./SubscriptionDisplay";
+import { fetchPublicSubscriptions } from "@/lib/subscriptions";
+import type { Subscription } from "@/types/Subscription";
 import "./NodeDisplay.css";
 
 export type ViewMode = "grid" | "table";
+type HomeContent = "servers" | "subscriptions" | "expiring";
+
+const EXPIRING_WINDOW_DAYS = 7;
+const EXPIRING_REFRESH_INTERVAL_MS = 60 * 1000;
+
+function isNodeExpiringWithinSevenDays(expiresAt: string) {
+  const remainingDays = getRemainingDays(expiresAt);
+  return (
+    Number.isFinite(remainingDays) &&
+    remainingDays >= 0 &&
+    remainingDays <= EXPIRING_WINDOW_DAYS
+  );
+}
+
+function isSubscriptionExpiringWithinSevenDays(expiresAt: string) {
+  const remainingDays = getRemainingDays(expiresAt);
+  return (
+    Number.isFinite(remainingDays) &&
+    remainingDays >= 0 &&
+    remainingDays <= EXPIRING_WINDOW_DAYS
+  );
+}
 
 interface NodeDisplayProps {
   nodes: NodeBasicInfo[];
@@ -34,21 +69,125 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
     "nodeSelectedGroup",
     "all",
   );
+  const [activeContent, setActiveContent] = useLocalStorage<HomeContent>(
+    "homeContentView",
+    "servers",
+  );
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptionsLoaded, setSubscriptionsLoaded] = useState(false);
+  const [, setExpirationDateKey] = useState(() =>
+    new Date().toDateString(),
+  );
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // 获取所有的分组
+  useEffect(() => {
+    let active = true;
+    void fetchPublicSubscriptions()
+      .then((items) => {
+        if (active) setSubscriptions(items);
+      })
+      .catch((error) => console.warn("Failed to load subscriptions:", error))
+      .finally(() => {
+        if (active) setSubscriptionsLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep date-based filters correct when the dashboard stays open overnight.
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setExpirationDateKey(new Date().toDateString());
+    }, EXPIRING_REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const orderedNodes = useMemo(
+    () => [...nodes].sort(compareNodesByAdminOrder),
+    [nodes],
+  );
+
+  // 分组顺序继承后台“服务器分组”页面保存的顺序。
   const groups = useMemo(() => {
     const groupSet = new Set<string>();
-    nodes.forEach((node) => {
+    orderedNodes.forEach((node) => {
       if (node.group && node.group.trim()) {
         groupSet.add(node.group);
       }
     });
-    return Array.from(groupSet).sort();
+    return Array.from(groupSet);
+  }, [orderedNodes]);
+
+  const groupNodeCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    nodes.forEach((node) => {
+      if (!node.group?.trim()) return;
+      counts.set(node.group, (counts.get(node.group) ?? 0) + 1);
+    });
+    return counts;
   }, [nodes]);
 
-  // 判断是否显示分组选择器
-  const showGroupSelector = groups.length >= 1;
+  const expiringNodes = orderedNodes.filter((node) =>
+    isNodeExpiringWithinSevenDays(node.expired_at),
+  );
+
+  const expiringSubscriptions = subscriptions.filter((item) =>
+    isSubscriptionExpiringWithinSevenDays(item.expires_at),
+  );
+
+  const expiringServiceCount =
+    expiringNodes.length + expiringSubscriptions.length;
+
+  // A stored group may disappear after the node list changes.
+  useEffect(() => {
+    if (selectedGroup !== "all" && !groups.includes(selectedGroup)) {
+      setSelectedGroup("all");
+    }
+  }, [groups, selectedGroup, setSelectedGroup]);
+
+  useEffect(() => {
+    if (
+      subscriptionsLoaded &&
+      activeContent === "subscriptions" &&
+      subscriptions.length === 0
+    ) {
+      setActiveContent("servers");
+    }
+  }, [activeContent, setActiveContent, subscriptions, subscriptionsLoaded]);
+
+  // Group statistics intentionally ignore the search term. They describe the
+  // selected group as a whole and use online nodes, matching the top overview.
+  const selectedGroupNodes = useMemo(
+    () =>
+      activeContent === "expiring"
+        ? expiringNodes
+        : selectedGroup === "all"
+          ? orderedNodes
+          : orderedNodes.filter((node) => node.group === selectedGroup),
+    [activeContent, expiringNodes, orderedNodes, selectedGroup],
+  );
+
+  const selectedGroupStats = useMemo(() => {
+    const onlineSet = new Set(liveData?.online ?? []);
+
+    return selectedGroupNodes.reduce(
+      (stats, node) => {
+        if (!onlineSet.has(node.uuid)) return stats;
+
+        stats.online += 1;
+        const network = liveData?.data?.[node.uuid]?.network;
+        if (!network) return stats;
+
+        stats.totalUp += network.totalUp || 0;
+        stats.totalDown += network.totalDown || 0;
+        stats.up += network.up || 0;
+        stats.down += network.down || 0;
+        return stats;
+      },
+      { online: 0, totalUp: 0, totalDown: 0, up: 0, down: 0 },
+    );
+  }, [liveData, selectedGroupNodes]);
 
   // 键盘快捷键支持
   useEffect(() => {
@@ -71,15 +210,15 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
 
   // 过滤节点
   const filteredNodes = useMemo(() => {
-    let result = nodes;
+    let result = activeContent === "expiring" ? expiringNodes : orderedNodes;
 
     // 先按分组过滤
-    if (selectedGroup !== "all") {
+    if (activeContent === "servers" && selectedGroup !== "all") {
       result = result.filter((node) => node.group === selectedGroup);
     }
 
-    // 再按搜索条件过滤
-    if (!searchTerm.trim()) return result;
+    // 到期筛选是跨类型固定视图，不受服务器搜索框的残留值影响。
+    if (activeContent === "expiring" || !searchTerm.trim()) return result;
 
     const term = searchTerm.toLowerCase().trim();
     return result.filter((node) => {
@@ -104,178 +243,346 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
 
       return basicMatch || regionMatch || priceMatch || statusMatch;
     });
-  }, [nodes, searchTerm, liveData, selectedGroup]);
+  }, [
+    activeContent,
+    expiringNodes,
+    orderedNodes,
+    searchTerm,
+    liveData,
+    selectedGroup,
+  ]);
 
   return (
     <div className="w-full">
-      {/* 控制栏 */}
-      <Flex
-        direction={{ initial: "column", sm: "row" }}
-        justify="between"
-        align={{ initial: "stretch", sm: "center" }}
-        gap="4"
-        className="control-bar mb-2 p-4 rounded-lg"
+      {/* 服务器分组与会员订阅共用同一级内容入口。 */}
+      <section
+        className="group-panel mx-4 mb-3"
+        aria-labelledby="home-content-title"
       >
-        {/* 搜索框 */}
-        <Flex
-          align="center"
-          gap="2"
-          className="flex-1 max-w-md relative"
-          wrap="wrap"
-        >
-          <TextField.Root
-            ref={searchRef}
-            placeholder={t("search.placeholder", {
-              defaultValue: "搜索节点名称、地区、系统...",
-            })}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-box flex-1 pr-8 min-w-32"
+        <div className="group-panel-header">
+          <div className="group-panel-heading">
+            <span className="group-panel-icon" aria-hidden="true">
+              <Layers3 size={17} strokeWidth={2} />
+            </span>
+            <div className="group-panel-heading-copy">
+              <Text id="home-content-title" size="2" weight="bold">
+                {t("nodeCard.contentPanelTitle")}
+              </Text>
+            </div>
+          </div>
+        </div>
+
+        <div className="group-options-scroll">
+          <div
+            className="group-options"
+            role="group"
+            aria-label={t("nodeCard.contentPanelTitle")}
           >
-            <TextField.Slot>
-              <Search size={16} />
-            </TextField.Slot>
-          </TextField.Root>
-          {searchTerm && (
-            <IconButton
-              variant="ghost"
-              size="1"
-              className="absolute right-2 h-6 w-6 search-clear-button"
+            <button
+              type="button"
+              className={`group-option ${activeContent === "servers" && selectedGroup === "all" ? "is-active" : ""}`}
+              aria-pressed={activeContent === "servers" && selectedGroup === "all"}
+              aria-label={t("nodeCard.groupOptionLabel", {
+                group: t("common.all"),
+                count: nodes.length,
+              })}
               onClick={() => {
-                setSearchTerm("");
-                searchRef.current?.focus();
+                setActiveContent("servers");
+                setSelectedGroup("all");
               }}
             >
-              <X size={12} />
-            </IconButton>
-          )}
-        </Flex>
-
-        {/* 视图模式切换 */}
-        <Flex align="center" gap="2">
-          <label className="whitespace-nowrap text-md text-muted-foreground">
-            {t("view.mode", { defaultValue: "显示模式" })}
-          </label>
-          <Flex gap="1">
-            <IconButton
-              variant={viewMode === "grid" ? "solid" : "soft"}
-              onClick={() => setViewMode("grid")}
-              className="transition-colors view-switch-button"
-            >
-              <Grid3X3 size={16} />
-            </IconButton>
-            <IconButton
-              variant={viewMode === "table" ? "solid" : "soft"}
-              onClick={() => setViewMode("table")}
-              className="transition-colors view-switch-button"
-            >
-              <Table2 size={16} />
-            </IconButton>
-          </Flex>
-        </Flex>
-      </Flex>
-      {/* 分组选择器 */}
-      {showGroupSelector && (
-        <Flex
-          align="center"
-          gap="2"
-          className="mx-4 mb-2 -mt-2 overflow-x-auto"
-        >
-          <label className="whitespace-nowrap text-md text-muted-foreground">
-            {t("common.group", { defaultValue: "分组" })}
-          </label>
-          <SegmentedControl.Root
-            value={selectedGroup}
-            onValueChange={setSelectedGroup}
-            size="1"
-          >
-            <SegmentedControl.Item value="all">
-              {t("common.all", { defaultValue: "所有" })}
-            </SegmentedControl.Item>
-            {groups.map((group) => (
-              <SegmentedControl.Item key={group} value={group}>
-                {group}
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl.Root>
-        </Flex>
-      )}
-      {/* 搜索结果统计 */}
-      <Flex justify="between" align="center" className="mx-4 mb-2">
-        {searchTerm.trim() ? (
-          <Text size="2" color="gray">
-            {t("search.results", {
-              count: filteredNodes.length,
-              total:
-                selectedGroup === "all"
-                  ? nodes.length
-                  : nodes.filter((n) => n.group === selectedGroup).length,
-              defaultValue: `找到 ${filteredNodes.length} 个服务器，共 ${
-                selectedGroup === "all"
-                  ? nodes.length
-                  : nodes.filter((n) => n.group === selectedGroup).length
-              } 个`,
-            })}
-          </Text>
-        ) : (
-          <Text size="2" color="gray">
-            {selectedGroup === "all"
-              ? t("nodeCard.totalNodes", {
-                  total: nodes.length,
-                  online: liveData?.online?.length || 0,
-                  defaultValue: `共 ${nodes.length} 个节点，${
-                    liveData?.online?.length || 0
-                  } 个在线`,
-                })
-              : t("nodeCard.groupNodes", {
-                  group: selectedGroup,
-                  total: filteredNodes.length,
-                  online: filteredNodes.filter((n) =>
-                    liveData?.online?.includes(n.uuid),
-                  ).length,
-                  defaultValue: `${selectedGroup} 分组：共 ${
-                    filteredNodes.length
-                  } 个节点，${
-                    filteredNodes.filter((n) =>
-                      liveData?.online?.includes(n.uuid),
-                    ).length
-                  } 个在线`,
-                })}
-          </Text>
-        )}
-      </Flex>
-
-      {/* 节点显示区域 */}
-      {filteredNodes.length === 0 ? (
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          className="py-16 mx-4"
-        >
-          <Text size="4" color="gray" className="mb-2">
-            {searchTerm.trim()
-              ? t("search.no_results", { defaultValue: "未找到匹配的节点" })
-              : t("nodes.empty", { defaultValue: "暂无节点数据" })}
-          </Text>
-          {searchTerm.trim() && (
-            <Text size="2" color="gray">
-              {t("search.try_different", {
-                defaultValue: "尝试不同的搜索关键词",
+              <span className="group-option-label">{t("common.all")}</span>
+              <span className="group-option-count" aria-hidden="true">
+                {nodes.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`group-option group-option--fixed ${activeContent === "expiring" ? "is-active" : ""}`}
+              aria-pressed={activeContent === "expiring"}
+              aria-label={t("nodeCard.expiringOptionLabel", {
+                count: expiringServiceCount,
               })}
-            </Text>
-          )}
-        </Flex>
+              onClick={() => {
+                setActiveContent("expiring");
+                setSelectedGroup("all");
+              }}
+            >
+              <CalendarClock size={14} aria-hidden="true" />
+              <span className="group-option-label">
+                {t("nodeCard.expiringSoon")}
+              </span>
+              <span className="group-option-count" aria-hidden="true">
+                {expiringServiceCount}
+              </span>
+            </button>
+            {subscriptions.length > 0 && (
+              <button
+                type="button"
+                className={`group-option group-option--fixed ${activeContent === "subscriptions" ? "is-active" : ""}`}
+                aria-pressed={activeContent === "subscriptions"}
+                aria-label={t("subscriptions.groupOptionLabel", {
+                  count: subscriptions.length,
+                })}
+                onClick={() => setActiveContent("subscriptions")}
+              >
+                <ReceiptText size={14} aria-hidden="true" />
+                <span className="group-option-label">
+                  {t("subscriptions.title")}
+                </span>
+                <span className="group-option-count" aria-hidden="true">
+                  {subscriptions.length}
+                </span>
+              </button>
+            )}
+            {groups.map((group) => (
+              <button
+                type="button"
+                key={group}
+                className={`group-option ${activeContent === "servers" && selectedGroup === group ? "is-active" : ""}`}
+                aria-pressed={activeContent === "servers" && selectedGroup === group}
+                aria-label={t("nodeCard.groupOptionLabel", {
+                  group,
+                  count: groupNodeCounts.get(group) ?? 0,
+                })}
+                onClick={() => {
+                  setActiveContent("servers");
+                  setSelectedGroup(group);
+                }}
+              >
+                <span className="group-option-label">{group}</span>
+                <span className="group-option-count" aria-hidden="true">
+                  {groupNodeCounts.get(group) ?? 0}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activeContent === "servers" && selectedGroup !== "all" && (
+          <div
+            className="group-summary"
+            role="group"
+            aria-label={t("nodeCard.groupSummary", {
+              group: selectedGroup,
+            })}
+          >
+            <div className="group-summary-identity">
+              <div className="group-summary-title">
+                <span className="group-summary-dot" aria-hidden="true" />
+                <Text size="2" weight="medium">
+                  {selectedGroup}
+                </Text>
+              </div>
+              <Text size="1" color="gray" className="whitespace-nowrap">
+                {t("nodeCard.groupAvailability", {
+                  online: selectedGroupStats.online,
+                  total: selectedGroupNodes.length,
+                })}
+              </Text>
+            </div>
+
+            <div className="group-summary-metrics">
+              <div className="group-summary-metric">
+                <Text size="1" color="gray">
+                  {t("nodeCard.totalTraffic")}
+                </Text>
+                <Text size="2" weight="medium" className="whitespace-nowrap">
+                  ↑ {formatBytes(selectedGroupStats.totalUp)} / ↓{" "}
+                  {formatBytes(selectedGroupStats.totalDown)}
+                </Text>
+              </div>
+              <div className="group-summary-metric">
+                <Text size="1" color="gray">
+                  {t("network_speed")}
+                </Text>
+                <Text size="2" weight="medium" className="whitespace-nowrap">
+                  ↑ {formatSpeed(selectedGroupStats.up)} / ↓{" "}
+                  {formatSpeed(selectedGroupStats.down)}
+                </Text>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {activeContent === "subscriptions" ? (
+        <SubscriptionDisplay items={subscriptions} />
       ) : (
         <>
-          {viewMode === "grid" ? (
+          {/* 服务器搜索与视图控制只在常规服务器内容中显示。 */}
+          {activeContent === "servers" && (
+            <Flex
+              direction={{ initial: "column", sm: "row" }}
+              justify="between"
+              align={{ initial: "stretch", sm: "center" }}
+              gap="4"
+              className="control-bar mb-2 p-4 rounded-lg"
+            >
+              <Flex
+                align="center"
+                gap="2"
+                className="flex-1 max-w-md relative"
+                wrap="wrap"
+              >
+                <TextField.Root
+                  ref={searchRef}
+                  placeholder={t("search.placeholder")}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-box flex-1 pr-8 min-w-32"
+                >
+                  <TextField.Slot>
+                    <Search size={16} />
+                  </TextField.Slot>
+                </TextField.Root>
+                {searchTerm && (
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    className="absolute right-2 h-6 w-6 search-clear-button"
+                    aria-label={t("search.clear")}
+                    onClick={() => {
+                      setSearchTerm("");
+                      searchRef.current?.focus();
+                    }}
+                  >
+                    <X size={12} />
+                  </IconButton>
+                )}
+              </Flex>
+
+              <Flex align="center" gap="2">
+                <label className="whitespace-nowrap text-md text-muted-foreground">
+                  {t("view.mode")}
+                </label>
+                <Flex gap="1">
+                  <IconButton
+                    variant={viewMode === "grid" ? "solid" : "soft"}
+                    onClick={() => setViewMode("grid")}
+                    className="transition-colors view-switch-button"
+                    aria-label={t("view.grid")}
+                  >
+                    <Grid3X3 size={16} />
+                  </IconButton>
+                  <IconButton
+                    variant={viewMode === "table" ? "solid" : "soft"}
+                    onClick={() => setViewMode("table")}
+                    className="transition-colors view-switch-button"
+                    aria-label={t("view.table")}
+                  >
+                    <Table2 size={16} />
+                  </IconButton>
+                </Flex>
+              </Flex>
+            </Flex>
+          )}
+
+          {activeContent === "expiring" && (
+            <Flex
+              justify="between"
+              align={{ initial: "start", sm: "center" }}
+              direction={{ initial: "column", sm: "row" }}
+              gap="2"
+              className="expiring-summary mx-4 mb-3"
+            >
+              <div>
+                <Text as="div" size="2" weight="bold">
+                  {t("nodeCard.expiringSoon")}
+                </Text>
+                <Text as="div" size="1" color="gray">
+                  {t("nodeCard.expiringSummary", {
+                    nodes: expiringNodes.length,
+                    subscriptions: expiringSubscriptions.length,
+                  })}
+                </Text>
+              </div>
+              <Flex gap="1" aria-label={t("view.mode")}>
+                <IconButton
+                  variant={viewMode === "grid" ? "solid" : "soft"}
+                  onClick={() => setViewMode("grid")}
+                  className="transition-colors view-switch-button"
+                  aria-label={t("view.grid")}
+                >
+                  <Grid3X3 size={16} />
+                </IconButton>
+                <IconButton
+                  variant={viewMode === "table" ? "solid" : "soft"}
+                  onClick={() => setViewMode("table")}
+                  className="transition-colors view-switch-button"
+                  aria-label={t("view.table")}
+                >
+                  <Table2 size={16} />
+                </IconButton>
+              </Flex>
+            </Flex>
+          )}
+
+          {activeContent === "servers" &&
+            (searchTerm.trim() || selectedGroup === "all") && (
+              <Flex justify="between" align="center" className="mx-4 mb-2">
+                <Text size="2" color="gray">
+                  {searchTerm.trim()
+                    ? t("search.results", {
+                        count: filteredNodes.length,
+                        total:
+                          selectedGroup === "all"
+                            ? nodes.length
+                            : selectedGroupNodes.length,
+                      })
+                    : t("nodeCard.totalNodes", {
+                        total: nodes.length,
+                        online: liveData?.online?.length || 0,
+                      })}
+                </Text>
+              </Flex>
+            )}
+
+          {activeContent === "expiring" && expiringServiceCount === 0 ? (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              className="py-16 mx-4"
+            >
+              <CalendarClock size={28} className="mb-3 text-muted-foreground" />
+              <Text size="4" color="gray" className="mb-2">
+                {t("nodeCard.noExpiringServices")}
+              </Text>
+              <Text size="2" color="gray">
+                {t("nodeCard.noExpiringServicesDescription")}
+              </Text>
+            </Flex>
+          ) : filteredNodes.length === 0 ? (
+            activeContent === "servers" ? (
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                className="py-16 mx-4"
+              >
+                <Text size="4" color="gray" className="mb-2">
+                  {searchTerm.trim()
+                    ? t("search.no_results")
+                    : t("nodes.empty")}
+                </Text>
+                {searchTerm.trim() && (
+                  <Text size="2" color="gray">
+                    {t("search.try_different")}
+                  </Text>
+                )}
+              </Flex>
+            ) : null
+          ) : viewMode === "grid" ? (
             <NodeGrid nodes={filteredNodes} liveData={liveData} />
           ) : (
-            <Suspense
-              fallback={<div style={{ padding: 16 }}>Loading table…</div>}
-            >
+            <Suspense fallback={<Loading text={t("nodes.loading")} />}>
               <NodeTable nodes={filteredNodes} liveData={liveData} />
             </Suspense>
+          )}
+
+          {activeContent === "expiring" && expiringSubscriptions.length > 0 && (
+            <SubscriptionDisplay items={expiringSubscriptions} />
           )}
         </>
       )}

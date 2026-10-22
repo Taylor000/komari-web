@@ -12,6 +12,9 @@ const UsageBar = React.memo(
   ({ value, label, compact = false, max = 100 }: UsageBarProps) => {
     // Ensure value is between 0 and 100
     const clampedValue = Math.min(Math.max(value, 0), max);
+    const ariaMax = Number.isFinite(max)
+      ? max
+      : Math.max(100, Math.ceil(clampedValue));
 
     // Determine color based on thresholds
     const getColor = (val: number) => {
@@ -26,22 +29,21 @@ const UsageBar = React.memo(
       return (
         <Box style={{ width: "100%" }}>
           <Box
+            className="usage-bar-track usage-bar-track--compact"
             style={{
               width: "100%",
-              height: "6px",
-              backgroundColor: "var(--gray-5)",
-              borderRadius: "3px",
-              overflow: "hidden",
               marginBottom: "2px",
             }}
+            role="progressbar"
+            aria-label={label}
+            aria-valuemin={0}
+            aria-valuemax={ariaMax}
+            aria-valuenow={clampedValue}
           >
             <div
+              className={`usage-bar-fill usage-bar-fill--${barColor}`}
               style={{
-                height: "100%",
-                backgroundColor: `var(--${barColor}-9)`,
-                borderRadius: "3px",
                 width: `${clampedValue}%`,
-                transition: "width 0.5s ease-out",
               }}
             />
           </Box>
@@ -63,21 +65,20 @@ const UsageBar = React.memo(
           </Text>
         </Flex>
         <Box
+          className="usage-bar-track"
           style={{
             width: "100%",
-            height: "8px",
-            backgroundColor: "var(--gray-5)",
-            borderRadius: "4px",
-            overflow: "hidden",
           }}
+          role="progressbar"
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={ariaMax}
+          aria-valuenow={clampedValue}
         >
           <div
+            className={`usage-bar-fill usage-bar-fill--${barColor}`}
             style={{
-              height: "100%",
-              backgroundColor: `var(--${barColor}-9)`,
-              borderRadius: "4px",
               width: `${clampedValue}%`,
-              transition: "width 0.5s ease-out",
             }}
           />
         </Box>
