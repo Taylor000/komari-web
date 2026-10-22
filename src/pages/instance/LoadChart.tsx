@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useLiveData } from "../../contexts/LiveDataContext";
 import { useTranslation } from "react-i18next";
 import { Card, Flex, SegmentedControl } from "@radix-ui/themes";
-import { formatBytes } from "@/utils/unitHelper";
+import { formatBytes, noWrap } from "@/utils/unitHelper";
 import { useNodeList } from "@/contexts/NodeListContext";
 import fillMissingTimePoints, { type RecordFormat } from "@/utils/RecordHelper";
 import {
@@ -22,6 +22,7 @@ import {
 } from "recharts";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 import Loading from "@/components/loading";
+import { EdgeTick } from "./chartAxis";
 // #region 图表
 type LoadChartProps = {
   data: RecordFormat[];
@@ -167,10 +168,10 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
   const secondaryColor = colors[1];
   const cn = "instance-load-chart-card flex flex-col w-full";
   const chartMargin = {
-    top: 0,
-    right: 16,
+    top: 4,
+    right: 8,
     bottom: 0,
-    left: 16,
+    left: 12,
   };
   const live_data = all_live_data?.data?.data[uuid ?? ""];
   const timeFormatter = (value: any, index: number) => {
@@ -214,10 +215,10 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
   };
   const ChartTitle = (text: string, left: React.ReactNode) => {
     return (
-      <Flex justify="between" align="center" className="mb-2">
-        <label className="text-xl font-bold">{text}</label>
-        <label className="text-sm text-muted-foreground">{left}</label>
-      </Flex>
+      <div className="chart-card-header">
+        <span className="chart-card-title">{text}</span>
+        <span className="chart-card-value">{left}</span>
+      </div>
     );
   };
   const minute = 60;
@@ -280,7 +281,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         </div>
       )}
       {error && (
-        <div style={{ color: "red", textAlign: "center", width: "100%" }}>
+        <div className="instance-chart-error">
           {error}
         </div>
       )}
@@ -306,6 +307,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={<EdgeTick />}
               />
               <YAxis
                 tickLine={false}
@@ -334,7 +336,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={primaryColor}
                 fill={primaryColor}
-                opacity={0.8}
+                fillOpacity={0.12}
+                strokeWidth={1.6}
                 dot={false}
               />
             </AreaChart>
@@ -343,8 +346,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         {/* Ram */}
         <Card className={cn}>
           {ChartTitle(
-            "Ram",
-            <Flex gap="0" direction="column" align="end" className="text-sm">
+            t("nodeCard.ram"),
+            <Flex gap="0" direction="column" align="end">
               <label>
                 {live_data?.ram?.used
                   ? `${formatBytes(live_data.ram.used)} / ${formatBytes(
@@ -364,11 +367,11 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           <ChartContainer
             config={{
               ram: {
-                label: "Ram",
+                label: t("nodeCard.ram"),
                 color: primaryColor,
               },
               swap: {
-                label: "Swap",
+                label: t("nodeCard.swap"),
                 color: secondaryColor,
               },
             }}
@@ -391,6 +394,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={<EdgeTick />}
               />
               <YAxis
                 tickLine={false}
@@ -444,7 +448,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={primaryColor}
                 fill={primaryColor}
-                opacity={0.8}
+                fillOpacity={0.12}
+                strokeWidth={1.6}
                 dot={false}
               />
               <Area
@@ -452,7 +457,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={secondaryColor}
                 fill={secondaryColor}
-                opacity={0.8}
+                fillOpacity={0.12}
+                strokeWidth={1.6}
                 dot={false}
               />
             </AreaChart>
@@ -461,7 +467,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         {/* Disk */}
         <Card className={cn}>
           {ChartTitle(
-            "Disk",
+            t("nodeCard.disk"),
             live_data?.disk?.used
               ? `${formatBytes(live_data.disk.used)} / ${formatBytes(
                   node?.disk_total || 0
@@ -471,7 +477,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           <ChartContainer
             config={{
               disk: {
-                label: "Disk",
+                label: t("nodeCard.disk"),
                 color: primaryColor,
               },
             }}
@@ -483,13 +489,14 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={<EdgeTick />}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
                 domain={[0, node?.disk_total || 100]}
                 tickFormatter={(value, index) =>
-                  index !== 0 ? `${formatBytes(value)}` : ""
+                  index !== 0 ? noWrap(formatBytes(value)) : ""
                 }
                 orientation="left"
                 type="number"
@@ -511,7 +518,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={primaryColor}
                 fill={primaryColor}
-                opacity={0.8}
+                fillOpacity={0.12}
+                strokeWidth={1.6}
                 dot={false}
               />
             </AreaChart>
@@ -521,7 +529,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         <Card className={cn}>
           {ChartTitle(
             t("nodeCard.networkSpeed"),
-            <Flex gap="0" align="end" direction="column" className="text-sm">
+            <Flex gap="0" align="end" direction="column">
               <span>
                 ↑ {formatBytes(live_data?.network.up || 0)}
                 /s
@@ -551,12 +559,13 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={<EdgeTick />}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value, index) =>
-                  index !== 0 ? `${formatBytes(value)}` : ""
+                  index !== 0 ? noWrap(formatBytes(value)) : ""
                 }
                 orientation="left"
                 type="number"
@@ -578,7 +587,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={primaryColor}
                 fill={primaryColor}
-                opacity={0.8}
+                strokeWidth={1.6}
                 dot={false}
               />
               <Line
@@ -586,7 +595,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={colors[3]}
                 fill={colors[3]}
-                opacity={0.8}
+                strokeWidth={1.6}
                 dot={false}
               />
             </LineChart>
@@ -596,7 +605,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         <Card className={cn}>
           {ChartTitle(
             t("chart.connections"),
-            <Flex gap="0" align="end" direction="column" className="text-sm">
+            <Flex gap="0" align="end" direction="column">
               <span>TCP: {live_data?.connections.tcp}</span>
               <span>UDP: {live_data?.connections.udp}</span>
             </Flex>
@@ -620,6 +629,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={<EdgeTick />}
               />
               <YAxis
                 tickLine={false}
@@ -646,7 +656,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={primaryColor}
                 fill={primaryColor}
-                opacity={0.8}
+                strokeWidth={1.6}
                 dot={false}
               />
               <Line
@@ -654,7 +664,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={colors[3]}
                 fill={colors[3]}
-                opacity={0.8}
+                strokeWidth={1.6}
                 dot={false}
               />
             </LineChart>
@@ -678,6 +688,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 tickLine={false}
                 tickFormatter={timeFormatter}
                 interval={0}
+                tick={<EdgeTick />}
               />
               <YAxis
                 tickLine={false}
@@ -705,7 +716,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                 animationDuration={0}
                 stroke={primaryColor}
                 fill={primaryColor}
-                opacity={0.8}
+                strokeWidth={1.6}
                 dot={false}
               />
             </LineChart>
@@ -716,15 +727,11 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           live_data.gpu.count > 0 &&
           live_data.gpu.detailed_info?.map((gpu, index) => (
             <Card key={`gpu-${index}`} className={cn}>
-              <Flex direction="column" gap="2" className="mb-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xl font-bold">{`GPU ${index + 1}: ${
-                    gpu.name
-                  }`}</label>
-                  <span className="text-sm text-muted-foreground">
-                    {formatBytes(gpu.memory_total)}
-                  </span>
-                </div>
+              <Flex direction="column" gap="2">
+                {ChartTitle(
+                  `GPU ${index + 1}: ${gpu.name}`,
+                  formatBytes(gpu.memory_total),
+                )}
                 <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
                   <div className="text-center">
                     <div className="font-medium">{t("chart.usage")}</div>
@@ -790,6 +797,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                     tickLine={false}
                     tickFormatter={timeFormatter}
                     interval={0}
+                    tick={<EdgeTick />}
                   />
                   <YAxis
                     tickLine={false}
@@ -831,7 +839,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                     animationDuration={0}
                     stroke={primaryColor}
                     fill={primaryColor}
-                    opacity={0.8}
+                    fillOpacity={0.12}
+                    strokeWidth={1.6}
                     dot={false}
                   />
                   <Area
@@ -839,7 +848,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                     animationDuration={0}
                     stroke={secondaryColor}
                     fill={secondaryColor}
-                    opacity={0.8}
+                    fillOpacity={0.12}
+                    strokeWidth={1.6}
                     dot={false}
                   />
                   <Area
@@ -847,7 +857,8 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
                     animationDuration={0}
                     stroke={colors[2]}
                     fill={colors[2]}
-                    opacity={0.6}
+                    fillOpacity={0.12}
+                    strokeWidth={1.6}
                     dot={false}
                   />
                 </AreaChart>

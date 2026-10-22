@@ -388,7 +388,12 @@
     "totalTraffic": "总流量",
     "totalUpload": "总上传",
     "uptime": "运行时间",
-    "virtualization": "虚拟化"
+    "virtualization": "虚拟化",
+    "liveStatus": "实时状态",
+    "specs": "硬件与系统",
+    "cores": "{{count}} 核",
+    "backToList": "返回服务器列表",
+    "chartsTitle": "监控图表"
   },
   "nodes": {
     "empty": "暂无服务器数据",

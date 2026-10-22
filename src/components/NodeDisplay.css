@@ -34,6 +34,19 @@
   opacity: 1;
 }
 
+/* 搜索与视图控制条 */
+.control-bar {
+  padding: 0 1rem !important;
+  margin-bottom: 0.6rem !important;
+}
+
+.control-bar .search-box {
+  --text-field-focus-color: var(--accent-8);
+  border-radius: 0.7rem;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--surface-border), var(--surface-shadow);
+}
+
 /* 视图切换按钮的过渡效果 */
 .view-switch-button {
   transition: all 0.2s ease;
@@ -46,13 +59,11 @@
   align-items: center;
   gap: 0.65rem;
   overflow: hidden;
-  padding: 0.58rem 0.7rem;
-  border: 1px solid var(--gray-a5);
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--surface-border);
   border-radius: 0.9rem;
-  background: var(--color-panel-solid, var(--card));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.7),
-    0 0.18rem 0.45rem rgb(15 23 42 / 0.05);
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
 }
 
 .group-panel-header,
@@ -85,10 +96,9 @@
   height: 1.75rem;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 0.55rem;
-  color: var(--gray-11);
-  background: var(--gray-a3);
-  box-shadow: inset 0 0 0 1px var(--gray-a4);
+  border-radius: 0.6rem;
+  color: var(--accent-11);
+  background: var(--accent-a3);
 }
 
 .group-options-scroll {
@@ -125,11 +135,11 @@
   justify-content: center;
   gap: 0.38rem;
   padding: 0.32rem 0.45rem 0.32rem 0.65rem;
-  border: 1px solid var(--gray-a5);
+  border: 1px solid transparent;
   border-radius: 999px;
   color: var(--gray-11);
-  background: rgb(255 255 255 / 0.58);
-  box-shadow: 0 1px 1px rgb(15 23 42 / 0.025);
+  background: var(--gray-a2);
+  box-shadow: none;
   cursor: pointer;
   font: inherit;
   font-size: 0.76rem;
@@ -166,10 +176,10 @@
 }
 
 .expiring-summary {
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--orange-a5);
-  border-radius: 0.8rem;
-  background: var(--orange-a2);
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--amber-a5);
+  border-radius: 0.9rem;
+  background: var(--amber-a2);
 }
 
 .group-option-count {
@@ -181,6 +191,7 @@
   border-radius: 999px;
   color: var(--gray-11);
   background: var(--gray-a3);
+  font-family: var(--font-code);
   font-size: 0.66rem;
   font-variant-numeric: tabular-nums;
   font-weight: 650;
@@ -188,32 +199,26 @@
 
 @media (hover: hover) and (pointer: fine) {
   .group-option:not(.is-active):hover {
-    border-color: var(--gray-a7);
-    color: var(--gray-12);
-    background: var(--gray-a3);
-    box-shadow: 0 4px 10px rgb(15 23 42 / 0.055);
-    transform: translateY(-1px);
+    color: var(--accent-11);
+    background: var(--accent-a3);
   }
 }
 
 .group-option:focus-visible {
-  outline: 2px solid var(--gray-9);
+  outline: 2px solid var(--accent-8);
   outline-offset: 2px;
 }
 
 .group-option.is-active {
-  border-color: var(--gray-12);
-  color: var(--gray-1);
-  background: var(--gray-12);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 4px 12px rgb(15 23 42 / 0.12);
+  border-color: transparent;
+  color: var(--accent-contrast);
+  background: var(--accent-9);
+  box-shadow: 0 4px 12px -4px var(--accent-a8);
 }
 
 .group-option.is-active .group-option-count {
-  color: var(--gray-1);
-  background: rgb(255 255 255 / 0.14);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  color: var(--accent-contrast);
+  background: rgb(255 255 255 / 0.22);
 }
 
 .group-summary {
@@ -223,10 +228,10 @@
   gap: 0.65rem;
   margin-top: 0;
   padding: 0.55rem;
-  border: 1px solid var(--gray-a4);
-  border-radius: 0.9rem;
-  background: var(--gray-a2);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--surface-muted);
+  box-shadow: none;
 }
 
 .group-summary-identity {
@@ -235,7 +240,7 @@
   flex-direction: column;
   justify-content: center;
   padding-right: 1rem;
-  border-right: 1px solid var(--gray-a5);
+  border-right: 1px solid var(--surface-divider);
 }
 
 .group-summary-title {
@@ -255,8 +260,8 @@
   height: 0.45rem;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: var(--gray-11);
-  box-shadow: 0 0 0 3px var(--gray-a4);
+  background: var(--accent-9);
+  box-shadow: 0 0 0 3px var(--accent-a4);
 }
 
 .group-summary-metrics {
@@ -273,34 +278,10 @@
   justify-content: center;
   gap: 0.12rem;
   padding: 0.45rem 0.6rem;
-  border-radius: 0.65rem;
-  background: var(--gray-a2);
+  border-radius: 0.6rem;
+  background: var(--surface);
 }
 
-.dark .group-panel {
-  border-color: var(--gray-a5);
-  background: var(--color-panel-solid, var(--card));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.04),
-    0 0.22rem 0.5rem rgb(0 0 0 / 0.18);
-}
-
-.dark .group-option {
-  border-color: var(--gray-a5);
-  color: var(--gray-11);
-  background: rgb(255 255 255 / 0.045);
-}
-
-.dark .group-option.is-active {
-  border-color: var(--gray-12);
-  color: var(--gray-1);
-  background: var(--gray-12);
-}
-
-.dark .group-summary {
-  background: rgb(255 255 255 / 0.035);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
-}
 
 @media (max-width: 720px) {
   .group-panel {

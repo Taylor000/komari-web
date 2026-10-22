@@ -147,3 +147,8 @@ export function formatUptime(seconds: number, t: TFunction): string {
   }
   return parts.join("");
 }
+
+/** Recharts 会在空格处折行，坐标轴上的「数值 单位」改用不换行空格。 */
+export function noWrap(text: string): string {
+  return text.replace(/ /g, "\u00a0");
+}

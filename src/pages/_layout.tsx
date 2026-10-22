@@ -20,7 +20,7 @@ const IndexLayoutContent = () => {
           className={
             bgUrl
               ? "layout flex flex-col w-full min-h-screen bg-cover bg-center bg-fixed bg-no-repeat"
-              : "layout flex flex-col w-full min-h-screen bg-accent-1"
+              : "layout layout--wash flex flex-col w-full min-h-screen"
           }
           style={{
             backgroundImage: bgUrl ? `url(${bgUrl})` : "none",

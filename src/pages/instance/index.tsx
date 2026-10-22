@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useLiveData } from "../../contexts/LiveDataContext";
 import { useTranslation } from "react-i18next";
 import type { Record } from "../../types/LiveData";
 import Flag from "../../components/Flag";
-import { Card, Flex, SegmentedControl, Text } from "@radix-ui/themes";
+import { SegmentedControl } from "@radix-ui/themes";
+import { ArrowLeft, Layers3 } from "lucide-react";
+import { getOSImage, getOSName } from "@/utils/osImageHelper";
 import { useNodeList } from "@/contexts/NodeListContext";
 import { liveDataToRecords } from "@/utils/RecordHelper";
 import LoadChart from "./LoadChart";
@@ -39,12 +41,12 @@ export default function InstancePage() {
 
     const groups = new Map<string | null, typeof nodeList>();
 
-    [...nodeList].sort(compareNodesByAdminOrder).forEach((node) => {
-      const groupKey = node.group && node.group.trim() ? node.group : null;
+    [...nodeList].sort(compareNodesByAdminOrder).forEach((item) => {
+      const groupKey = item.group && item.group.trim() ? item.group : null;
       if (!groups.has(groupKey)) {
         groups.set(groupKey, []);
       }
-      groups.get(groupKey)?.push(node);
+      groups.get(groupKey)?.push(item);
     });
 
     return Array.from(groups.entries()).map(([group, nodes]) => ({
@@ -115,111 +117,128 @@ export default function InstancePage() {
     );
   }
 
+  const onlineSet = new Set(live_data?.data.online ?? []);
+  const osLabel = node?.os ? `${getOSName(node.os)} / ${node.arch}` : null;
+
   return (
     <div
       className={`instance-page${showServerSidebar ? " instance-page--with-sidebar" : ""}`}
     >
       {showServerSidebar && (
         <aside className="instance-sidebar">
-          <Card
+          <nav
             className="instance-sidebar-card"
-            style={{ height: "calc(100vh - 2rem)" }}
+            aria-label={t("common.serverList", { defaultValue: "服务器列表" })}
           >
-            <Flex direction="column" gap="0" className="h-full min-h-0">
-              <div className="p-3 border-b border-accent-3">
-                <Text size="2" weight="bold">
-                  {t("common.serverList", { defaultValue: "服务器列表" })}
-                </Text>
-              </div>
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-                {groupedNodes.map((group, groupIndex) => (
-                  <div key={groupIndex}>
-                    {group.group && (
-                      <div className="px-3 py-1 text-xs font-semibold text-accent-8 bg-accent-2 sticky top-0">
-                        {group.group}
-                      </div>
-                    )}
-                    {group.group === null && (
-                      <div className="px-3 py-1 text-xs font-semibold text-accent-8 bg-accent-2 sticky top-0">
-                        {t("common.ungrouped", { defaultValue: "未分组" })}
-                      </div>
-                    )}
-                    <div>
-                      {group.nodes.map((node) => (
-                        <div
-                          key={node.uuid}
-                          onClick={() => navigate(`/instance/${node.uuid}`)}
-                          className={`mx-1 my-0.5 px-2 py-0 cursor-pointer transition-colors text-sm rounded-md border-l-[4px] flex items-center gap-2 ${
-                            node.uuid === uuid
-                              ? "bg-accent-4 text-accent-10 font-bold"
-                              : "hover:bg-accent-3"
-                          }`}
-                          style={{
-                            borderLeft:
-                              node.uuid === uuid
-                                ? "4px solid var(--accent-8)"
-                                : "4px solid transparent",
-                          }}
-                        >
-                          <Flag flag={node.region} />
-                          <span
-                            className={`truncate ${
-                              node.uuid === uuid ? "text-accent-10" : ""
-                            }`}
-                          >
-                            {node.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+            <div className="instance-sidebar-header">
+              {t("common.serverList", { defaultValue: "服务器列表" })}
+              <span className="instance-sidebar-count">
+                {onlineSet.size} / {nodeList?.length ?? 0}
+              </span>
+            </div>
+            <div className="instance-sidebar-scroll">
+              {groupedNodes.map((group, groupIndex) => (
+                <div key={groupIndex} className="instance-sidebar-group">
+                  <div className="instance-sidebar-group-title">
+                    {group.group ??
+                      t("common.ungrouped", { defaultValue: "未分组" })}
                   </div>
-                ))}
-              </div>
-            </Flex>
-          </Card>
+                  {group.nodes.map((item) => (
+                    <button
+                      type="button"
+                      key={item.uuid}
+                      onClick={() => navigate(`/instance/${item.uuid}`)}
+                      className={`instance-sidebar-item${
+                        item.uuid === uuid ? " is-active" : ""
+                      }`}
+                      aria-current={item.uuid === uuid ? "page" : undefined}
+                    >
+                      <Flag flag={item.region} />
+                      <span className="instance-sidebar-name">{item.name}</span>
+                      <span
+                        className={`instance-sidebar-dot${
+                          onlineSet.has(item.uuid) ? " is-online" : ""
+                        }`}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </nav>
         </aside>
       )}
       <main className="instance-main">
-        <section className="instance-heading-card">
-          <header className="instance-heading">
-            <div className="instance-identity">
-              <span className="instance-flag" aria-hidden="true">
-                <Flag flag={node?.region ?? ""} />
+        <Link to="/" className="instance-back">
+          <ArrowLeft size={14} strokeWidth={2.2} aria-hidden="true" />
+          {t("nodeCard.backToList")}
+        </Link>
+        <section className="instance-hero">
+          <span className="instance-flag" aria-hidden="true">
+            <Flag flag={node?.region ?? ""} />
+          </span>
+          <div className="instance-identity">
+            <div className="instance-title-row">
+              <h1 className="instance-name">{node?.name ?? uuid}</h1>
+              <span
+                className={`instance-status instance-status--${isOnline ? "online" : "offline"}`}
+              >
+                <span className="instance-status-dot" aria-hidden="true" />
+                {isOnline ? t("nodeCard.online") : t("nodeCard.offline")}
               </span>
-              <div className="instance-identity-copy">
-                <h1 className="instance-name">{node?.name ?? uuid}</h1>
-                <span className="instance-uuid">{node?.uuid}</span>
-              </div>
             </div>
-            <span
-              className={`instance-status instance-status--${isOnline ? "online" : "offline"}`}
-            >
-              <span className="instance-status-dot" aria-hidden="true" />
-              {isOnline ? t("nodeCard.online") : t("nodeCard.offline")}
-            </span>
-          </header>
-          <DetailsGrid box align="center" uuid={uuid ?? ""} />
+            <div className="instance-chips">
+              {node?.group && (
+                <span className="instance-chip instance-chip--accent">
+                  <Layers3 size={12} aria-hidden="true" />
+                  {node.group}
+                </span>
+              )}
+              {osLabel && node && (
+                <span className="instance-chip">
+                  <img src={getOSImage(node.os)} alt="" aria-hidden="true" />
+                  {osLabel}
+                </span>
+              )}
+              {node?.virtualization && (
+                <span className="instance-chip">{node.virtualization}</span>
+              )}
+              {node?.uuid && (
+                <span className="instance-chip instance-chip--mono">
+                  {node.uuid}
+                </span>
+              )}
+            </div>
+          </div>
         </section>
-        <div className="instance-chart-switcher">
-          <SegmentedControl.Root
-            radius="full"
-            value={chartView}
-            onValueChange={(value) => setChartView(value as "load" | "ping")}
-          >
-            <SegmentedControl.Item value="load">
-              {t("nodeCard.load")}
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="ping">
-              {t("nodeCard.ping")}
-            </SegmentedControl.Item>
-          </SegmentedControl.Root>
-        </div>
-        {/* Recharts */}
-        {chartView === "load" ? (
-          <LoadChart data={liveDataToRecords(uuid ?? "", recent)} />
-        ) : (
-          <PingChart uuid={uuid ?? ""} />
-        )}
+        <DetailsGrid box align="center" uuid={uuid ?? ""} />
+        <section className="instance-charts">
+          <div className="instance-charts-header">
+            <h2 className="instance-charts-title">
+              {t("nodeCard.chartsTitle")}
+            </h2>
+            <SegmentedControl.Root
+              radius="full"
+              size="1"
+              value={chartView}
+              onValueChange={(value) => setChartView(value as "load" | "ping")}
+            >
+              <SegmentedControl.Item value="load">
+                {t("nodeCard.load")}
+              </SegmentedControl.Item>
+              <SegmentedControl.Item value="ping">
+                {t("nodeCard.ping")}
+              </SegmentedControl.Item>
+            </SegmentedControl.Root>
+          </div>
+          {/* Recharts */}
+          {chartView === "load" ? (
+            <LoadChart data={liveDataToRecords(uuid ?? "", recent)} />
+          ) : (
+            <PingChart uuid={uuid ?? ""} />
+          )}
+        </section>
       </main>
     </div>
   );

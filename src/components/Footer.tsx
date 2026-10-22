@@ -43,7 +43,7 @@ const Footer = () => {
   }, [call]);
 
   return (
-    <div className="footer p-2 border-t-1 border-t-[var(--gray-7)]">
+    <div className="footer">
       {/* Copyright and ICP Filing */}
 
       {customFooterHtml ? (

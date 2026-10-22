@@ -68,88 +68,107 @@
 
 :root {
   --font-code: "Maple Mono CN Medium", "Sarasa Mono SC", "Microsoft YaHei Mono", ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-  --radius: 0.625rem;
-  --background: oklch(0.982 0.003 255);
-  --foreground: oklch(0.205 0.008 255);
+  /* 界面文字使用系统无衬线字体，数字与代码仍保留等宽字体。 */
+  --font-ui: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+  --radius: 0.75rem;
+  --background: oklch(0.982 0.005 247);
+  --foreground: oklch(0.24 0.02 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.205 0.008 255);
+  --card-foreground: oklch(0.24 0.02 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.205 0.008 255);
-  --primary: oklch(0.245 0.01 255);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.955 0.004 255);
-  --secondary-foreground: oklch(0.245 0.01 255);
-  --muted: oklch(0.955 0.004 255);
-  --muted-foreground: oklch(0.525 0.012 255);
-  --accent: oklch(0.945 0.006 255);
-  --accent-foreground: oklch(0.245 0.01 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.895 0.006 255);
-  --input: oklch(0.895 0.006 255);
-  --ring: oklch(0.58 0.025 255);
-  --chart-1: oklch(0.43 0.035 255);
-  --chart-2: oklch(0.55 0.03 255);
-  --chart-3: oklch(0.66 0.025 255);
-  --chart-4: oklch(0.5 0.018 255);
-  --chart-5: oklch(0.72 0.018 255);
-  --chart-series-1: #334155;
-  --chart-series-2: #64748b;
-  --chart-series-3: #94a3b8;
-  --chart-series-4: #475569;
-  --chart-series-5: #1e293b;
-  --chart-series-6: #7b8ba1;
-  --chart-series-7: #526579;
-  --chart-series-8: #a8b3c2;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.24 0.02 260);
+  --primary: oklch(0.58 0.17 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.965 0.008 250);
+  --secondary-foreground: oklch(0.3 0.02 260);
+  --muted: oklch(0.965 0.008 250);
+  --muted-foreground: oklch(0.55 0.02 258);
+  --accent: oklch(0.955 0.016 250);
+  --accent-foreground: oklch(0.3 0.03 258);
+  --destructive: oklch(0.6 0.22 25);
+  --border: oklch(0.925 0.008 255);
+  --input: oklch(0.91 0.01 255);
+  --ring: oklch(0.68 0.13 250);
+  --chart-1: oklch(0.62 0.17 250);
+  --chart-2: oklch(0.7 0.13 190);
+  --chart-3: oklch(0.62 0.17 290);
+  --chart-4: oklch(0.76 0.15 75);
+  --chart-5: oklch(0.65 0.19 10);
+  --chart-series-1: #3b82f6;
+  --chart-series-2: #14b8a6;
+  --chart-series-3: #8b5cf6;
+  --chart-series-4: #f59e0b;
+  --chart-series-5: #ec4899;
+  --chart-series-6: #06b6d4;
+  --chart-series-7: #84cc16;
+  --chart-series-8: #64748b;
+  /* 统一的轻量卡片表面 */
+  --surface: #ffffff;
+  --surface-muted: oklch(0.975 0.006 250);
+  --surface-border: rgb(15 23 42 / 0.07);
+  --surface-divider: rgb(15 23 42 / 0.06);
+  --surface-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -6px rgb(15 23 42 / 0.06);
+  --surface-shadow-hover: 0 2px 4px rgb(15 23 42 / 0.04), 0 12px 28px -10px rgb(30 64 175 / 0.16);
+  --page-wash: radial-gradient(1200px 420px at 15% -8%, rgb(59 130 246 / 0.07), transparent 70%),
+    radial-gradient(900px 380px at 95% -12%, rgb(20 184 166 / 0.06), transparent 70%);
+  --sidebar: oklch(0.985 0.004 250);
+  --sidebar-foreground: oklch(0.24 0.02 260);
+  --sidebar-primary: oklch(0.58 0.17 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.955 0.016 250);
+  --sidebar-accent-foreground: oklch(0.3 0.03 258);
+  --sidebar-border: oklch(0.925 0.008 255);
+  --sidebar-ring: oklch(0.68 0.13 250);
 }
 
 .dark {
-  --background: oklch(0.16 0.006 255);
-  --foreground: oklch(0.94 0.004 255);
-  --card: oklch(0.205 0.006 255);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0.006 255);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.265 0.006 255);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.265 0.006 255);
-  --muted-foreground: oklch(0.7 0.012 255);
-  --accent: oklch(0.285 0.008 255);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.17 0.012 260);
+  --foreground: oklch(0.94 0.006 255);
+  --card: oklch(0.21 0.013 260);
+  --card-foreground: oklch(0.96 0.004 255);
+  --popover: oklch(0.21 0.013 260);
+  --popover-foreground: oklch(0.96 0.004 255);
+  --primary: oklch(0.7 0.14 250);
+  --primary-foreground: oklch(0.18 0.02 260);
+  --secondary: oklch(0.26 0.014 260);
+  --secondary-foreground: oklch(0.96 0.004 255);
+  --muted: oklch(0.26 0.014 260);
+  --muted-foreground: oklch(0.7 0.015 255);
+  --accent: oklch(0.28 0.02 255);
+  --accent-foreground: oklch(0.96 0.004 255);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.64 0.02 255);
-  --chart-1: oklch(0.78 0.025 255);
-  --chart-2: oklch(0.67 0.025 255);
-  --chart-3: oklch(0.56 0.025 255);
-  --chart-4: oklch(0.72 0.015 255);
-  --chart-5: oklch(0.5 0.015 255);
-  --chart-series-1: #d8dee8;
-  --chart-series-2: #aab6c5;
-  --chart-series-3: #7f90a6;
-  --chart-series-4: #bdc7d4;
-  --chart-series-5: #e6eaf0;
-  --chart-series-6: #8d9caf;
-  --chart-series-7: #c8d0db;
-  --chart-series-8: #6f8198;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.7 0.12 250);
+  --chart-1: oklch(0.72 0.14 250);
+  --chart-2: oklch(0.76 0.12 190);
+  --chart-3: oklch(0.72 0.14 290);
+  --chart-4: oklch(0.8 0.14 75);
+  --chart-5: oklch(0.72 0.17 10);
+  --chart-series-1: #60a5fa;
+  --chart-series-2: #2dd4bf;
+  --chart-series-3: #a78bfa;
+  --chart-series-4: #fbbf24;
+  --chart-series-5: #f472b6;
+  --chart-series-6: #22d3ee;
+  --chart-series-7: #a3e635;
+  --chart-series-8: #94a3b8;
+  --surface: oklch(0.21 0.013 260);
+  --surface-muted: oklch(0.235 0.014 260);
+  --surface-border: rgb(255 255 255 / 0.07);
+  --surface-divider: rgb(255 255 255 / 0.06);
+  --surface-shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 8px 20px -10px rgb(0 0 0 / 0.4);
+  --surface-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.3), 0 16px 32px -12px rgb(0 0 0 / 0.55);
+  --page-wash: radial-gradient(1200px 420px at 15% -8%, rgb(59 130 246 / 0.1), transparent 70%),
+    radial-gradient(900px 380px at 95% -12%, rgb(20 184 166 / 0.06), transparent 70%);
+  --sidebar: oklch(0.2 0.012 260);
+  --sidebar-foreground: oklch(0.96 0.004 255);
+  --sidebar-primary: oklch(0.7 0.14 250);
+  --sidebar-primary-foreground: oklch(0.18 0.02 260);
+  --sidebar-accent: oklch(0.27 0.016 260);
+  --sidebar-accent-foreground: oklch(0.96 0.004 255);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.6 0.1 250);
 }
 
 @layer base {
@@ -158,7 +177,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-code);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -166,16 +187,29 @@ body {
   background: var(--background);
 }
 
-/* Keep every product surface in the same compact, terminal-like typeface. */
+/* 界面统一使用清爽的无衬线字体；数字保持等宽对齐，代码类内容使用等宽字体。 */
 .radix-themes,
 .theme-root,
 button,
 input,
 select,
 textarea {
-  --default-font-family: var(--font-code) !important;
-  font-family: var(--font-code) !important;
+  --default-font-family: var(--font-ui) !important;
+  --code-font-family: var(--font-code) !important;
+  font-family: var(--font-ui) !important;
   font-variant-numeric: tabular-nums;
+}
+
+.radix-themes {
+  --cursor-button: pointer;
+}
+
+code,
+kbd,
+pre,
+.font-mono,
+.xterm {
+  font-family: var(--font-code) !important;
 }
 
 ::-webkit-scrollbar {
@@ -183,7 +217,7 @@ textarea {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(80,80,80,0.4);
+  background: rgb(100 116 139 / 0.3);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -199,5 +233,75 @@ textarea {
 
 body, * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(80,80,80,0.4) transparent;
+  scrollbar-color: rgb(100 116 139 / 0.3) transparent;
+}
+
+/* ---------- 站点外壳 ---------- */
+.layout--wash {
+  background-color: var(--background);
+  background-image: var(--page-wash);
+  background-repeat: no-repeat;
+}
+
+.nav-bar {
+  display: flex;
+  min-width: 100%;
+  max-height: 4rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem 0.6rem;
+}
+
+.nav-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nav-brand-mark {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.65rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--blue-9), var(--teal-9));
+  box-shadow: 0 4px 12px -4px rgb(59 130 246 / 0.55);
+}
+
+.nav-brand-name {
+  overflow: hidden;
+  color: var(--gray-12);
+  font-size: clamp(1.15rem, 4.2vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-icon-button {
+  margin: 0 !important;
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1rem 1.4rem !important;
+  border-top: 1px solid var(--surface-divider) !important;
+}
+
+@media (max-width: 520px) {
+  .nav-bar {
+    padding: 0.7rem 0.9rem 0.45rem;
+  }
+
+  .nav-brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
 }

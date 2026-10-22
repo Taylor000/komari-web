@@ -17,15 +17,13 @@
   isolation: isolate;
   overflow: hidden;
   /* Radix uses this value in arithmetic, so it must remain a single length. */
-  --card-padding: 0.85rem;
-  --base-card-border-radius: 0.9rem;
+  --card-padding: 0.95rem;
+  --base-card-border-radius: 1rem;
   --card-background-color: transparent;
-  border: 1px solid var(--gray-a5);
-  border-radius: 0.9rem;
-  background: var(--color-panel-solid, var(--card));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.68),
-    0 0.18rem 0.5rem rgb(15 23 42 / 0.055);
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
   filter: none;
   -webkit-mask: none;
   mask: none;
@@ -40,7 +38,7 @@
   z-index: -1;
   inset: 0;
   border-radius: inherit;
-  background: var(--color-panel-solid, var(--card));
+  background: var(--surface);
 }
 
 .node-card.rt-Card::after {
@@ -54,10 +52,14 @@
   opacity: 1;
 }
 
+.node-card--offline .node-card-name {
+  color: var(--gray-10);
+}
+
 .node-card:focus-within {
   box-shadow:
     0 0 0 2px var(--accent-a7),
-    0 16px 38px rgb(15 23 42 / 0.12);
+    var(--surface-shadow-hover);
 }
 
 .node-card-layout,
@@ -97,7 +99,7 @@
 
 .node-card-title-link {
   border-radius: 0.35rem;
-  color: inherit;
+  color: var(--gray-12);
   text-decoration: none;
   outline: none;
 }
@@ -106,8 +108,13 @@
   box-shadow: 0 0 0 2px var(--accent-a7);
 }
 
+.node-card-title-link:hover .node-card-name {
+  color: var(--accent-11);
+}
+
 .node-card-name {
-  letter-spacing: -0.02em;
+  transition: color 160ms ease;
+  letter-spacing: -0.01em;
   line-height: 1.15;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -154,8 +161,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding-bottom: 0.55rem;
-  border-bottom: 1px solid var(--gray-a4);
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.6rem;
+  background: var(--surface-muted);
 }
 
 .node-system-item {
@@ -239,8 +247,8 @@
 
 .node-carrier-loss {
   min-width: 0;
-  padding-top: 0.48rem;
-  border-top: 1px solid var(--gray-a4);
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--surface-divider);
 }
 
 .node-carrier-loss-grid {
@@ -290,6 +298,7 @@
 
 .node-carrier-loss-value {
   max-width: 100%;
+  font-family: var(--font-code);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -301,6 +310,10 @@
 
 .node-carrier-loss-card--good {
   color: var(--gray-11);
+}
+
+.node-carrier-loss-card--good .node-carrier-loss-dot {
+  color: var(--green-9);
 }
 
 .node-carrier-loss-card--warning {
@@ -388,8 +401,13 @@
   line-height: 1.15;
 }
 
+.node-resource-metric .rt-Flex > .rt-Text:last-child {
+  font-family: var(--font-code);
+}
+
 .node-resource-detail {
   margin-top: 0.3rem;
+  font-family: var(--font-code);
   font-size: 0.67rem !important;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.015em;
@@ -399,8 +417,9 @@
 
 .node-network-section {
   min-width: 0;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--gray-a4);
+  padding: 0.55rem 0.4rem;
+  border-radius: 0.7rem;
+  background: var(--surface-muted);
 }
 
 .node-section-heading {
@@ -444,7 +463,7 @@
   bottom: 0;
   left: 50%;
   width: 1px;
-  background: var(--gray-a5);
+  background: var(--surface-divider);
   content: "";
   pointer-events: none;
 }
@@ -492,7 +511,16 @@
   color: var(--gray-11);
 }
 
+.node-network-metric--up .node-network-label svg {
+  color: var(--teal-10);
+}
+
+.node-network-metric--down .node-network-label svg {
+  color: var(--blue-10);
+}
+
 .node-network-speed {
+  font-family: var(--font-code);
   overflow: hidden;
   color: var(--gray-12);
   font-size: 0.79rem;
@@ -511,6 +539,7 @@
 }
 
 .node-network-total strong {
+  font-family: var(--font-code);
   min-width: 0;
   overflow: hidden;
   color: var(--gray-11);
@@ -530,8 +559,8 @@
   height: 0.3rem;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--gray-a4);
-  box-shadow: inset 0 1px 2px rgb(15 23 42 / 0.07);
+  background: var(--gray-a3);
+  box-shadow: none;
 }
 
 .usage-bar-track--compact {
@@ -548,11 +577,11 @@
 }
 
 .usage-bar-fill--green {
-  --usage-color: var(--gray-11);
+  --usage-color: linear-gradient(90deg, var(--blue-8), var(--blue-9));
 }
 
 .usage-bar-fill--orange {
-  --usage-color: var(--orange-9);
+  --usage-color: var(--amber-9);
 }
 
 .usage-bar-fill--red {
@@ -566,8 +595,8 @@
 
 .node-price-tags {
   min-width: 0;
-  padding-top: 0.35rem;
-  border-top: 1px solid var(--gray-a4);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--surface-divider);
 }
 
 .node-price-tags .rt-Badge {
@@ -583,35 +612,12 @@
   white-space: normal;
 }
 
-.dark .node-card.rt-Card {
-  border-color: var(--gray-a5);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.07),
-    0 0.35rem 0.8rem rgb(0 0 0 / 0.28);
-}
-
-.dark .node-card.rt-Card::before {
-  background: var(--color-panel-solid, var(--card));
-}
-
-.dark .node-card.rt-Card::after {
-  box-shadow: none;
-}
-
 @media (hover: hover) and (pointer: fine) {
   .node-card:hover {
     z-index: 2;
-    border-color: var(--gray-a7);
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.9),
-      0 0.55rem 1.25rem rgb(15 23 42 / 0.1);
-    transform: translateY(-0.2rem);
-  }
-
-  .dark .node-card:hover {
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.09),
-      0 0.8rem 1.6rem rgb(0 0 0 / 0.42);
+    border-color: var(--accent-a5);
+    box-shadow: var(--surface-shadow-hover);
+    transform: translateY(-2px);
   }
 }
 
@@ -622,9 +628,9 @@
   }
 
   .node-card.rt-Card {
-    --card-padding: 0.8rem;
-    --base-card-border-radius: 0.8rem;
-    border-radius: 0.8rem;
+    --card-padding: 0.85rem;
+    --base-card-border-radius: 0.9rem;
+    border-radius: 0.9rem;
   }
 
   .node-card-layout {

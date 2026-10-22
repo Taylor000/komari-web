@@ -199,8 +199,8 @@ const Callouts = () => {
   const { showCallout } = useLiveData();
   const ishttps = window.location.protocol === "https:";
   return (
-    <Flex direction="column" gap="2" className="m-2">
-      <Callout.Root m="2" hidden={ishttps} color="red">
+    <Flex direction="column" gap="2" className="home-callouts m-2">
+      <Callout.Root m="2" hidden={ishttps} color="red" variant="surface">
         <Callout.Icon>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -219,7 +219,13 @@ const Callouts = () => {
           </Text>
         </Callout.Text>
       </Callout.Root>
-      <Callout.Root m="2" hidden={showCallout} id="callout" color="tomato">
+      <Callout.Root
+        m="2"
+        hidden={showCallout}
+        id="callout"
+        color="tomato"
+        variant="surface"
+      >
         <Callout.Icon>
           <svg
             xmlns="http://www.w3.org/2000/svg"

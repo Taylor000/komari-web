@@ -1,5 +1,13 @@
 .global-summary {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.home-callouts:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+.home-callouts .rt-CalloutRoot {
+  border-radius: 0.8rem;
 }
 
 .summary-stat-grid {
@@ -24,22 +32,45 @@
   gap: 0.6rem;
   padding: 1rem;
   overflow: hidden;
-  border: 1px solid var(--gray-a5, var(--border));
-  border-radius: 0.75rem;
-  background: var(--color-panel-solid, var(--card));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.7),
-    0 0.12rem 0.3rem rgb(15 23 42 / 0.055);
+  border: 1px solid var(--surface-border);
+  border-radius: 0.9rem;
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+}
+
+.summary-stat--time {
+  --summary-accent: var(--blue-11);
+  --summary-soft: var(--blue-a3);
+}
+
+.summary-stat--online {
+  --summary-accent: var(--green-11);
+  --summary-soft: var(--green-a3);
+}
+
+.summary-stat--region {
+  --summary-accent: var(--violet-11);
+  --summary-soft: var(--violet-a3);
+}
+
+.summary-stat--traffic {
+  --summary-accent: var(--teal-11);
+  --summary-soft: var(--teal-a3);
+}
+
+.summary-stat--speed {
+  --summary-accent: var(--amber-11);
+  --summary-soft: var(--amber-a3);
 }
 
 .summary-stat-icon {
   position: relative;
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 0.5rem;
+  border-radius: 0.7rem;
   color: var(--summary-accent);
   background: var(--summary-soft);
 }
@@ -59,14 +90,15 @@
 
 .summary-stat-label {
   color: var(--gray-10, var(--muted-foreground));
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .summary-stat-value {
   color: var(--gray-12, var(--foreground));
-  font-size: 0.96rem;
+  font-family: var(--font-code);
+  font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -84,13 +116,6 @@
   border-radius: 999px;
   background: var(--green-9);
   box-sizing: content-box;
-}
-
-.dark .summary-stat {
-  background: var(--color-panel-solid, var(--card));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.06),
-    0 0.18rem 0.35rem rgb(0 0 0 / 0.2);
 }
 
 @media (max-width: 1200px) {

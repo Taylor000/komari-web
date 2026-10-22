@@ -15,6 +15,7 @@ import Tips from "@/components/ui/tips";
 import { Eye, EyeOff } from "lucide-react";
 import { useRPC2Call } from "@/contexts/RPC2Context";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { EdgeTick } from "./chartAxis";
 
 interface PingRecord {
   client: string;
@@ -332,10 +333,10 @@ const PingChart = ({ uuid }: { uuid: string }) => {
     <Flex
       direction="column"
       align="center"
-      gap="4"
-      className="w-full max-w-screen"
+      gap="3"
+      className="instance-ping-chart w-full max-w-screen"
     >
-      <div className="w-full overflow-x-auto px-2">
+      <div className="instance-load-range w-full overflow-x-auto">
         <div className="w-max mx-auto">
           <SegmentedControl.Root
             value={view}
@@ -366,12 +367,12 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         </div>
       )}
       {error && (
-        <div style={{ color: "red", textAlign: "center", width: "100%" }}>
+        <div className="instance-chart-error">
           {error}
         </div>
       )}
       {latestValues.length > 0 ? (
-        <Card className="w-full max-w-[900px] mb-2">
+        <Card className="instance-ping-summary w-full">
           <Tips className="absolute top-0 right-0 m-2">
             <label>{t("chart.loss_tips")}</label>
           </Tips>
@@ -382,14 +383,14 @@ const PingChart = ({ uuid }: { uuid: string }) => {
             }}
           >
             {latestValues.map((task) => (
-              <div key={task.id} className="flex flex-row items-center rounded">
+              <div key={task.id} className="ping-task-item flex flex-row items-center">
                 <div
-                  className="w-1 h-6 rounded-xs "
+                  className="ping-task-swatch"
                   style={{ backgroundColor: task.color }}
                 />
                 <div className="flex items-start justify-center ml-1 flex-col">
                   <div className="flex items-center gap-1 -mb-1">
-                    <label className="font-bold text-md">{task.name}</label>
+                    <label className="ping-task-name">{task.name}</label>
                     <Tips
                       side="top"
                       trigger={
@@ -505,7 +506,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                       </div>
                     </Tips>
                   </div>
-                  <div className="flex gap-2 text-sm text-muted-foreground">
+                  <div className="ping-task-stats">
                     <span>
                       {task.value !== null
                         ? `${Number(task.value).toFixed(0)} ms`
@@ -531,7 +532,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
           {t("common.none")}
         </div>
       )}
-      <Card className="w-full max-w-[900px]">
+      <Card className="instance-ping-card w-full">
         {chartData.length === 0 ? (
           <div className="w-full h-40 flex items-center justify-center text-muted-foreground">
             {t("common.none")}
@@ -541,13 +542,14 @@ const PingChart = ({ uuid }: { uuid: string }) => {
             <LineChart
               data={chartData}
               accessibilityLayer
-              margin={{ top: 0, right: 16, bottom: 0, left: 16 }}
+              margin={{ top: 4, right: 8, bottom: 0, left: 12 }}
             >
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="time"
                 tickLine={false}
                 tickFormatter={timeFormatter}
+                tick={<EdgeTick />}
                 interval="preserveStartEnd"
                 minTickGap={30}
                 allowDuplicatedCategory={false}

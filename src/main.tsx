@@ -80,6 +80,8 @@ const App = () => {
       <Theme
         appearance={resolvedAppearance}
         accentColor={CUSTOM_THEME.color}
+        grayColor={CUSTOM_THEME.gray}
+        radius="large"
         scaling="110%"
         className="theme-root"
         style={{

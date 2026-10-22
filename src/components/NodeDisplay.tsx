@@ -453,7 +453,7 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
               </Flex>
 
               <Flex align="center" gap="2">
-                <label className="whitespace-nowrap text-md text-muted-foreground">
+                <label className="whitespace-nowrap text-sm text-muted-foreground">
                   {t("view.mode")}
                 </label>
                 <Flex gap="1">

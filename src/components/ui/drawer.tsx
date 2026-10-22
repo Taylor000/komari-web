@@ -60,6 +60,7 @@ function DrawerContent({
       <Theme
         appearance={resolvedAppearance}
         accentColor={CUSTOM_THEME.color}
+        grayColor={CUSTOM_THEME.gray}
       >
         <DrawerOverlay />
         <DrawerPrimitive.Content

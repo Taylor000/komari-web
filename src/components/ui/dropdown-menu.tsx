@@ -50,7 +50,7 @@ function DropdownMenuContent({
         )}
         {...props}
       >
-        <Theme appearance={resolvedAppearance} accentColor={CUSTOM_THEME.color}>
+        <Theme appearance={resolvedAppearance} accentColor={CUSTOM_THEME.color} grayColor={CUSTOM_THEME.gray}>
           {children}
         </Theme>
       </DropdownMenuPrimitive.Content>
@@ -244,7 +244,7 @@ function DropdownMenuSubContent({
       )}
       {...props}
     >
-      <Theme appearance={resolvedAppearance} accentColor={CUSTOM_THEME.color}>
+      <Theme appearance={resolvedAppearance} accentColor={CUSTOM_THEME.color} grayColor={CUSTOM_THEME.gray}>
         {children}
       </Theme>
     </DropdownMenuPrimitive.SubContent>
