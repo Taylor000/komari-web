@@ -384,7 +384,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData }) => {
                     >
                       <div>
                         <Badge
-                          color={isOnline ? "green" : "red"}
+                          color={isOnline ? "green" : "gray"}
                           variant="soft"
                           size="1"
                         >

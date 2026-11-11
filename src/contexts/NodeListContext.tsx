@@ -51,6 +51,8 @@ export type NodeBasicInfo = {
   traffic_limit_type: undefined | "sum" | "max" | "min" | "up" | "down";
   /** 过期时间 */
   expired_at: string;
+  /** 购买时间（未设置为空串），用于计算存续时长 */
+  purchased_at: string;
   /** 创建时间 */
   created_at: string;
   /** 更新时间 */
@@ -116,6 +118,7 @@ export const NodeListProvider: React.FC<{ children: React.ReactNode }> = ({
           traffic_limit: n.traffic_limit ?? 0,
           traffic_limit_type: n.traffic_limit_type,
           expired_at: n.expired_at ?? "",
+          purchased_at: n.purchased_at ?? "",
           created_at: n.created_at ?? "",
           updated_at: n.updated_at ?? "",
           ipv4: n.ipv4,

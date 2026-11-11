@@ -33,7 +33,7 @@ export const OnlineIndicator = () => {
         </>
       ) : (
         <>
-          <WifiOff size={12} className="text-orange-500" />
+          <WifiOff size={12} className="text-[var(--gray-10)]" />
           <span>{tOnline('nodeCard.offline')}</span>
         </>
       )}

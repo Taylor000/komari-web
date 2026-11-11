@@ -1,13 +1,8 @@
-.subscription-content-summary,
-.subscription-card-header,
-.subscription-identity,
-.subscription-primary-row,
-.subscription-card-footer {
-  display: flex;
-  align-items: center;
-}
+/* 会员订阅卡片：紧凑三段式（身份与价格 / 开通与存续 / 状态与到期） */
 
 .subscription-content-summary {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin: 0 1rem 0.15rem;
@@ -15,25 +10,16 @@
 
 .subscription-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
-  gap: clamp(0.8rem, 1.35vw, 1.25rem);
-  padding: clamp(0.8rem, 1.4vw, 1.25rem);
-  padding-top: 0.55rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18.5rem), 1fr));
+  gap: clamp(0.6rem, 1vw, 0.85rem);
+  padding: clamp(0.75rem, 1.2vw, 1rem);
+  padding-top: 0.5rem;
   box-sizing: border-box;
-}
-
-.subscription-logo {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  color: var(--gray-11);
-  background: var(--gray-a3);
-  box-shadow: inset 0 0 0 1px var(--gray-a4);
 }
 
 .subscription-card-link {
   min-width: 0;
-  border-radius: 1.15rem;
+  border-radius: 0.9rem;
   color: inherit;
   text-decoration: none;
   outline: none;
@@ -48,15 +34,15 @@
   height: 100%;
   isolation: isolate;
   overflow: hidden;
-  --card-padding: 1rem;
-  --base-card-border-radius: 1.15rem;
+  --card-padding: 0.8rem;
+  --base-card-border-radius: 0.9rem;
   --card-background-color: transparent;
   border: 1px solid var(--gray-a5);
   background: var(--color-panel-solid, var(--card));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.68),
-    0 0.18rem 0.5rem rgb(15 23 42 / 0.055);
-  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 240ms ease;
+    0 0.12rem 0.4rem rgb(15 23 42 / 0.05);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms ease;
 }
 
 .subscription-card.rt-Card::before {
@@ -79,141 +65,219 @@
   height: 100%;
   min-width: 0;
   flex-direction: column;
-  gap: 0.72rem;
+  gap: 0.55rem;
 }
+
+/* —— 第一段：图标 + 名称/套餐 + 价格 —— */
 
 .subscription-card-header {
+  display: flex;
   min-width: 0;
-  justify-content: space-between;
-  gap: 0.7rem;
-}
-
-.subscription-identity {
-  min-width: 0;
-  flex: 1;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .subscription-logo {
+  display: grid;
   width: 2.1rem;
   height: 2.1rem;
-  border-radius: 0.68rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.55rem;
+  color: var(--gray-11);
+  background: var(--gray-a3);
+  box-shadow: inset 0 0 0 1px var(--gray-a4);
 }
 
 .subscription-title-copy {
-  min-width: 0;
-  flex: 1;
-}
-
-.subscription-card-actions {
-  flex: 0 0 auto;
-}
-
-.subscription-card-actions .rt-Badge {
-  gap: 0.35rem;
-  font-weight: 600;
-}
-
-.subscription-status-dot {
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: 0 0 0 0.17rem color-mix(in srgb, currentColor 12%, transparent);
-}
-
-.subscription-link-icon {
-  color: var(--gray-9);
-}
-
-.subscription-divider {
-  height: 1px;
-  background: var(--gray-a5);
-}
-
-.subscription-primary-row {
-  min-width: 0;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.subscription-price {
-  margin-top: 0.08rem;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.025em;
-}
-
-.subscription-cycle-pill,
-.subscription-remaining {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.subscription-cycle-pill {
-  flex: 0 0 auto;
-  padding: 0.38rem 0.55rem;
-  border: 1px solid var(--gray-a4);
-  border-radius: 999px;
-  color: var(--gray-11);
-  background: var(--gray-a2);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.subscription-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.subscription-fact {
   display: flex;
   min-width: 0;
-  min-height: 3.2rem;
+  flex: 1;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.18rem;
-  padding: 0.48rem 0.6rem;
-  border: 1px solid var(--gray-a4);
-  border-radius: 0.68rem;
-  background: var(--gray-a2);
+  gap: 0.1rem;
 }
 
-.subscription-fact span {
-  color: var(--gray-10);
-  font-size: 0.7rem;
+.subscription-name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-.subscription-fact strong {
+/* 与服务器卡片名称同一字阶 */
+.subscription-name-text {
+  min-width: 0;
   overflow: hidden;
   color: var(--gray-12);
-  font-size: 0.82rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.subscription-card-footer {
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: auto;
-  color: var(--gray-11);
-  font-size: 0.76rem;
-  font-weight: 600;
+.subscription-link-icon {
+  flex: 0 0 auto;
+  color: var(--gray-9);
 }
 
-.subscription-card--red .subscription-remaining { color: var(--red-11); }
-.subscription-card--orange .subscription-remaining { color: var(--orange-11); }
-.subscription-card--green .subscription-remaining { color: var(--gray-11); }
+.subscription-subline {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--gray-10);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.subscription-plan {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subscription-renewal {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.2rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--gray-a5);
+  white-space: nowrap;
+}
+
+.subscription-price-block {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+  line-height: 1.2;
+}
+
+.subscription-price {
+  color: var(--gray-12);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.subscription-price--hidden {
+  color: var(--gray-10);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.subscription-cycle {
+  color: var(--gray-10);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* —— 第二段：开通时间 + 存续时长 —— */
+
+.subscription-lifetime {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  padding: 0.38rem 0.55rem;
+  border-radius: 0.55rem;
+  background: var(--gray-a2);
+  box-shadow: inset 0 0 0 1px var(--gray-a3);
+  color: var(--gray-10);
+  font-size: 0.72rem;
+}
+
+.subscription-lifetime-item {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.28rem;
+  white-space: nowrap;
+}
+
+.subscription-lifetime-item strong {
+  color: var(--gray-12);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.subscription-lifetime--empty strong {
+  color: var(--gray-9);
+  font-weight: 500;
+}
+
+.subscription-lifetime-duration strong {
+  color: var(--accent-11);
+}
+
+/* —— 第三段：状态 + 剩余天数 + 到期日 —— */
+
+.subscription-card-footer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--gray-a5);
+  font-size: 0.72rem;
+}
+
+.subscription-status {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.3rem;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subscription-status-sep {
+  color: var(--gray-8);
+}
+
+.subscription-status-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.subscription-card--green .subscription-status { color: var(--gray-11); }
+.subscription-card--orange .subscription-status { color: var(--gray-12); font-weight: 700; }
+.subscription-card--red .subscription-status { color: var(--red-11); }
+
+.subscription-expiry {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--gray-10);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* —— 深色模式 / 交互 —— */
 
 .dark .subscription-card.rt-Card {
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.075),
     0 2px 6px rgb(0 0 0 / 0.18),
-    0 16px 38px rgb(0 0 0 / 0.25);
+    0 12px 28px rgb(0 0 0 / 0.22);
 }
 
 .dark .subscription-card.rt-Card::before {
@@ -226,11 +290,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .subscription-card:hover {
-    transform: translateY(-0.25rem);
+    transform: translateY(-0.18rem);
     box-shadow:
       0 0 0 1px rgb(15 23 42 / 0.045),
-      0 8px 18px rgb(15 23 42 / 0.08),
-      0 24px 52px rgb(15 23 42 / 0.14);
+      0 6px 14px rgb(15 23 42 / 0.08),
+      0 18px 40px rgb(15 23 42 / 0.12);
   }
 }
 
@@ -241,19 +305,8 @@
   }
 
   .subscription-grid {
-    gap: 0.75rem;
+    gap: 0.6rem;
     padding: 0.75rem;
-  }
-
-  .subscription-card.rt-Card {
-    --card-padding: 0.85rem;
-    --base-card-border-radius: 1rem;
-  }
-}
-
-@media (max-width: 360px) {
-  .subscription-facts {
-    grid-template-columns: 1fr;
   }
 }
 

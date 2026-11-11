@@ -17,6 +17,54 @@
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.05);
 }
 
+.admin-subscription-card.is-dragging {
+  position: relative;
+  z-index: 2;
+  border-color: var(--accent-a7);
+  box-shadow: 0 10px 28px rgb(15 23 42 / 0.16);
+}
+
+.admin-subscription-handle {
+  display: grid;
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1.6rem;
+  height: 2.45rem;
+  margin: 0 -0.35rem 0 -0.4rem;
+  place-items: center;
+  border: 0;
+  border-radius: 0.45rem;
+  color: var(--gray-8);
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.admin-subscription-handle:hover:not(:disabled) {
+  color: var(--gray-11);
+  background: var(--gray-a3);
+}
+
+.admin-subscription-handle:active:not(:disabled) {
+  cursor: grabbing;
+}
+
+.admin-subscription-handle:focus-visible {
+  outline: 2px solid var(--accent-8);
+  outline-offset: 1px;
+}
+
+.admin-subscription-handle:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.admin-subscription-order-hint {
+  margin-bottom: -0.5rem;
+}
+
 .admin-subscription-icon,
 .admin-subscription-empty-icon {
   display: grid;

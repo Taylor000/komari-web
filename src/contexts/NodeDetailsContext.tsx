@@ -24,6 +24,7 @@ export type NodeDetail = {
   group: string | undefined;
   billing_cycle: number;
   expired_at: string;
+  purchased_at?: string | null;
   created_at: string;
   updated_at: string;
   [key: string]: any; 

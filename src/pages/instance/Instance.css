@@ -142,8 +142,7 @@
   height: 0.4rem;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: var(--red-9);
-  opacity: 0.75;
+  background: var(--gray-8);
 }
 
 .instance-sidebar-dot.is-online {
@@ -258,8 +257,8 @@
 }
 
 .instance-status--offline {
-  color: var(--red-11);
-  background: var(--red-a3);
+  color: var(--gray-10);
+  background: var(--gray-a3);
 }
 
 .instance-status-dot {
@@ -393,7 +392,7 @@
 }
 
 .details-meter {
-  --meter-color: linear-gradient(90deg, var(--blue-8), var(--blue-9));
+  --meter-color: var(--gray-12);
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -404,7 +403,7 @@
 }
 
 .details-meter--warning {
-  --meter-color: var(--amber-9);
+  --meter-color: var(--gray-12);
 }
 
 .details-meter--critical {
@@ -438,7 +437,7 @@
 }
 
 .details-meter--warning .details-meter-value {
-  color: var(--amber-11);
+  color: var(--gray-12);
 }
 
 .details-meter--critical .details-meter-value {
@@ -493,23 +492,23 @@
 }
 
 .details-stat--up {
-  --stat-color: var(--teal-11);
-  --stat-soft: var(--teal-a3);
+  --stat-color: var(--gray-11);
+  --stat-soft: var(--gray-a3);
 }
 
 .details-stat--down {
-  --stat-color: var(--blue-11);
-  --stat-soft: var(--blue-a3);
+  --stat-color: var(--gray-11);
+  --stat-soft: var(--gray-a3);
 }
 
 .details-stat--load {
-  --stat-color: var(--violet-11);
-  --stat-soft: var(--violet-a3);
+  --stat-color: var(--gray-11);
+  --stat-soft: var(--gray-a3);
 }
 
 .details-stat--uptime {
-  --stat-color: var(--amber-11);
-  --stat-soft: var(--amber-a3);
+  --stat-color: var(--gray-11);
+  --stat-soft: var(--gray-a3);
 }
 
 .details-stat-icon {

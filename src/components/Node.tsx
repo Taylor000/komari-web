@@ -14,6 +14,7 @@ import type { TFunction } from "i18next";
 import Tips from "./ui/tips";
 
 import { formatBytes, formatUptime } from "@/utils/unitHelper";
+import { resolveLifetime } from "@/utils/lifetime";
 
 interface NodeProps {
   basic: NodeBasicInfo;
@@ -59,6 +60,8 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
   );
   const uptime = online ? formatUptime(liveData.uptime, t) : "-";
   const compactUptime = online ? formatCompactUptime(liveData.uptime, t) : "-";
+  // 存续时长：从购买时间算起，不受重启影响
+  const lifetime = resolveLifetime(basic, publicInfo?.theme_settings, t);
   return (
     <Card
       id={basic.uuid}
@@ -67,7 +70,7 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
       <Flex direction="column" gap="2" className="node-card-layout">
         <Flex
           justify="between"
-          align="start"
+          align="center"
           className="node-card-header"
         >
           <Flex
@@ -84,16 +87,9 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
               className="node-card-title-link"
               style={{ flex: 1, minWidth: 0 }}
             >
-              <Flex direction="column" style={{ minWidth: 0 }}>
-                <Text
-                  weight="bold"
-                  size="3"
-                  className="node-card-name"
-                  style={{ maxWidth: "100%" }}
-                >
-                  {basic.name}
-                </Text>
-              </Flex>
+              <span className="node-card-name" title={basic.name}>
+                {basic.name}
+              </span>
             </Link>
           </Flex>
           <Flex
@@ -118,9 +114,9 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
               }
             />
             <Badge
-              color={online ? "green" : "red"}
+              color="gray"
               variant="soft"
-              className="node-status-badge"
+              className={`node-status-badge node-status-badge--${online ? "online" : "offline"}`}
             >
               <span className="node-status-dot" aria-hidden="true" />
               {online ? t("nodeCard.online") : t("nodeCard.offline")}
@@ -132,7 +128,10 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
           <div className="node-system-item node-system-item--uptime">
             <Clock3 size={14} aria-hidden="true" />
             <span className="node-system-label">{t("nodeCard.uptime")}</span>
-            <span className="node-system-value" title={uptime}>
+            <span
+              className="node-system-value"
+              title={`${t("nodeCard.uptime")}: ${uptime}`}
+            >
               {compactUptime}
             </span>
           </div>
@@ -219,24 +218,10 @@ const Node = React.memo(({ basic, live, online }: NodeProps) => {
 
           <CarrierLossOverview ping={liveData.ping} online={online} />
         </Flex>
-        <PriceTags
-          className="node-price-tags"
-          price={basic.price}
-          billing_cycle={basic.billing_cycle}
-          expired_at={basic.expired_at}
-          auto_renewal={basic.auto_renewal}
-          currency={basic.currency}
-          tags={basic.tags || ""}
-          ip4={
-            publicInfo?.theme_settings?.showIpTagsInCard
-              ? basic.ipv4
-              : undefined
-          }
-          ip6={
-            publicInfo?.theme_settings?.showIpTagsInCard
-              ? basic.ipv6
-              : undefined
-          }
+        <NodeCardFooter
+          basic={basic}
+          lifetime={lifetime}
+          showIpTags={!!publicInfo?.theme_settings?.showIpTagsInCard}
         />
       </Flex>
     </Card>
@@ -328,18 +313,129 @@ function NetworkMetric({
   const Icon = direction === "up" ? ArrowUp : ArrowDown;
 
   return (
-    <div className={`node-network-metric node-network-metric--${direction}`}>
+    <div
+      className={`node-network-metric node-network-metric--${direction}`}
+      title={`${label}: ${speed} · ${totalLabel}: ${total}`}
+    >
+      <span className="node-network-icon" aria-hidden="true">
+        <Icon size={14} strokeWidth={2.4} />
+      </span>
       <span className="node-network-copy">
-        <span className="node-network-label">
-          <Icon size={14} strokeWidth={2.2} aria-hidden="true" />
-          {label}
+        <span className="node-network-speed" aria-label={`${label}: ${speed}`}>
+          {speed}
         </span>
-        <strong className="node-network-speed">{speed}</strong>
+        <span className="node-network-total">
+          <span>{totalLabel}</span>
+          <strong>{total}</strong>
+        </span>
       </span>
-      <span className="node-network-total" title={`${totalLabel}: ${total}`}>
-        <span>{totalLabel}</span>
-        <strong>{total}</strong>
-      </span>
+    </div>
+  );
+}
+
+/** 存续时长：满一天只显示天数，保证底栏一行放得下 */
+function formatLifetimeShort(seconds: number, t: TFunction) {
+  const days = Math.floor(seconds / 86400);
+  return days >= 1
+    ? `${days}${t("nodeCard.time_day")}`
+    : formatCompactUptime(seconds, t);
+}
+
+/** 卡片底栏：单行、中性色胶囊，仅临近到期时着色 */
+function NodeCardFooter({
+  basic,
+  lifetime,
+  showIpTags,
+}: {
+  basic: NodeBasicInfo;
+  lifetime: Lifetime | null;
+  showIpTags: boolean;
+}) {
+  const [t] = useTranslation();
+  const hasPrice = basic.price !== 0;
+  const expiry = hasPrice ? getExpiryInfo(basic.expired_at, t) : null;
+  const priceText = hasPrice
+    ? `${basic.price === -1 ? t("common.free") : `${basic.currency}${basic.price}`}/${formatBillingCycle(basic.billing_cycle, t)}`
+    : null;
+  const customTags = parseCustomTags(basic.tags);
+
+  const pills: React.ReactNode[] = [];
+  if (showIpTags && hasPrice && basic.ipv4) {
+    pills.push(<span key="v4" className="node-pill">V4</span>);
+  }
+  if (showIpTags && hasPrice && basic.ipv6) {
+    pills.push(<span key="v6" className="node-pill">V6</span>);
+  }
+  if (priceText) {
+    pills.push(
+      <span key="price" className="node-pill node-pill--strong" title={priceText}>
+        {priceText}
+      </span>,
+    );
+  }
+  if (expiry) {
+    pills.push(
+      <span
+        key="expiry"
+        className={`node-pill node-pill--${expiry.level}`}
+        title={`${expiry.label} · ${String(basic.expired_at).slice(0, 10)}`}
+      >
+        {expiry.label}
+      </span>,
+    );
+  }
+
+  const trailing: React.ReactNode[] = [];
+  if (lifetime) {
+    trailing.push(
+      <span
+        key="lifetime"
+        className="node-pill node-pill--shrink"
+        title={lifetime.title}
+      >
+        <CalendarClock size={11} aria-hidden="true" />
+        <span className="node-pill-text">
+          {t("nodeCard.lifetime")}
+          <span className="node-pill-value">
+            {formatLifetimeShort(lifetime.seconds, t)}
+          </span>
+        </span>
+      </span>,
+    );
+  }
+  if (basic.auto_renewal) {
+    trailing.push(
+      <span key="renewal" className="node-pill" title={t("common.auto_renewal")}>
+        <RefreshCw size={10} aria-hidden="true" />
+        {t("common.auto_renewal")}
+      </span>,
+    );
+  }
+  customTags.forEach(({ text, color }, index) =>
+    trailing.push(
+      <span
+        key={`tag-${index}`}
+        className="node-pill node-pill--shrink"
+        style={
+          color && color !== "gray"
+            ? { color: `var(--${color}-11)`, background: `var(--${color}-a3)` }
+            : undefined
+        }
+        title={text}
+      >
+        <span className="node-pill-text">{text}</span>
+      </span>,
+    ),
+  );
+
+  if (!pills.length && !trailing.length) return null;
+
+  return (
+    <div className="node-card-footer">
+      {pills}
+      {trailing.length > 0 && (
+        <span className="node-card-footer-end">{trailing}</span>
+      )}
     </div>
   );
 }
@@ -366,12 +462,38 @@ const formatLossRate = (loss: number) => {
   return `${loss.toFixed(loss >= 10 ? 0 : 1)}%`;
 };
 
-const getLossTone = (loss: number | null, online: boolean) => {
+const formatLatency = (latency: number) => `${Math.round(latency)}ms`;
+
+type Tone = "good" | "warning" | "critical" | "unavailable";
+
+const getLossTone = (loss: number | null, online: boolean): Tone => {
   if (!online || loss === null) return "unavailable";
   if (loss > 5) return "critical";
   if (loss >= 1) return "warning";
   return "good";
 };
+
+const getLatencyTone = (latency: number | null, online: boolean): Tone => {
+  if (!online || latency === null) return "unavailable";
+  if (latency > 300) return "critical";
+  if (latency >= 150) return "warning";
+  return "good";
+};
+
+const toneRank: { [tone in Tone]: number } = {
+  unavailable: 0,
+  good: 1,
+  warning: 2,
+  critical: 3,
+};
+
+const worseTone = (a: Tone, b: Tone): Tone =>
+  toneRank[a] >= toneRank[b] ? a : b;
+
+const average = (values: number[]) =>
+  values.length
+    ? values.reduce((sum, value) => sum + value, 0) / values.length
+    : null;
 
 const CarrierLossOverview = React.memo(
   ({ ping, online }: CarrierLossOverviewProps) => {
@@ -395,17 +517,29 @@ const CarrierLossOverview = React.memo(
               (stat) =>
                 namePattern.test(stat.name) && Number.isFinite(stat.loss),
             );
-            const loss = carrierStats.length
-              ? carrierStats.reduce((sum, stat) => sum + stat.loss, 0) /
-                carrierStats.length
-              : null;
-            const tone = getLossTone(loss, online);
-            const value = online && loss !== null ? formatLossRate(loss) : "--";
+            const loss = average(carrierStats.map((stat) => stat.loss));
+            // avg is 0 when every sample in the window was lost
+            const latency = average(
+              carrierStats
+                .filter((stat) => Number.isFinite(stat.avg) && stat.avg > 0)
+                .map((stat) => stat.avg),
+            );
+            const lossTone = getLossTone(loss, online);
+            const latencyTone = getLatencyTone(latency, online);
+            const tone = worseTone(lossTone, latencyTone);
+            const lossValue =
+              online && loss !== null ? formatLossRate(loss) : "--";
+            const latencyValue =
+              online && latency !== null ? formatLatency(latency) : "--";
             const label = t(`nodeCard.carrier.${key}`);
             const stateLabel = online
               ? loss === null
-                ? t("nodeCard.carrierLossNoData")
-                : t("nodeCard.carrierLossValue", { carrier: label, value })
+                ? t("nodeCard.carrierLossNoData", { carrier: label })
+                : t("nodeCard.carrierLossValue", {
+                    carrier: label,
+                    latency: latencyValue,
+                    loss: lossValue,
+                  })
               : t("nodeCard.carrierLossOffline", { carrier: label });
 
             return (
@@ -416,14 +550,24 @@ const CarrierLossOverview = React.memo(
                 aria-label={stateLabel}
                 title={`${stateLabel} · ${t("nodeCard.carrierLossWindow")}`}
               >
-                <span className="node-carrier-loss-label">
-                  <span
-                    className="node-carrier-loss-dot"
-                    aria-hidden="true"
-                  />
+                <span className="node-carrier-loss-chip" aria-hidden="true">
                   {label}
                 </span>
-                <span className="node-carrier-loss-value">{value}</span>
+                <span className="node-carrier-loss-copy">
+                  <span
+                    className={`node-carrier-loss-latency node-carrier-tone--${latencyTone}`}
+                  >
+                    {latencyValue}
+                  </span>
+                  <span className="node-carrier-loss-sub">
+                    {t("nodeCard.carrierLossLabel")}
+                    <span
+                      className={`node-carrier-loss-value node-carrier-tone--${lossTone}`}
+                    >
+                      {lossValue}
+                    </span>
+                  </span>
+                </span>
               </div>
             );
           })}
@@ -441,8 +585,20 @@ type NodeGridProps = {
 import { Box } from "@radix-ui/themes";
 import { Link } from "react-router-dom";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
-import PriceTags from "./PriceTags";
-import { ArrowDown, ArrowUp, Clock3, TrendingUp } from "lucide-react";
+import {
+  formatBillingCycle,
+  getExpiryInfo,
+  parseCustomTags,
+} from "./PriceTags";
+import type { Lifetime } from "@/utils/lifetime";
+import {
+  ArrowDown,
+  ArrowUp,
+  CalendarClock,
+  RefreshCw,
+  Clock3,
+  TrendingUp,
+} from "lucide-react";
 import MiniPingChartFloat from "./MiniPingChartFloat";
 import { getOSImage, getOSName } from "@/utils/osImageHelper";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";

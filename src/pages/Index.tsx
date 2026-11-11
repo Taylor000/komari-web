@@ -4,13 +4,14 @@ import {
   Text,
 } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ChartNoAxesCombined,
   Clock3,
   MapPin,
   Server,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import NodeDisplay from "../components/NodeDisplay";
@@ -19,6 +20,14 @@ import { useLiveData } from "../contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
 import Loading from "@/components/loading";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { fetchPublicSubscriptions } from "@/lib/subscriptions";
+import type { Subscription } from "@/types/Subscription";
+import {
+  fallbackRateTable,
+  formatCny,
+  loadRates,
+  summarizeCost,
+} from "@/utils/costHelper";
 import "./Index.css";
 
 const Index = () => {
@@ -46,10 +55,38 @@ const Index = () => {
         currentTime: true,
         currentOnline: true,
         regionOverview: true,
-        trafficOverview: true,
         networkSpeed: true,
-      },
+        trafficOverview: true,
+        costOverview: true,
+      } as Record<string, boolean>,
     );
+
+    // 成本统计：服务器 + 公开订阅，统一折算为人民币
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [rateTable, setRateTable] = useState(fallbackRateTable);
+    useEffect(() => {
+      let alive = true;
+      fetchPublicSubscriptions()
+        .then((items) => alive && setSubscriptions(items ?? []))
+        .catch(() => {});
+      loadRates().then((table) => alive && setRateTable(table));
+      return () => {
+        alive = false;
+      };
+    }, []);
+    const costParts = useMemo(() => {
+      const servers = summarizeCost(nodeList ?? [], rateTable.rates);
+      const subs = summarizeCost(
+        subscriptions.filter((s) => s.show_price),
+        rateTable.rates,
+      );
+      return { servers, subs };
+    }, [nodeList, subscriptions, rateTable]);
+    const costSummary = {
+      monthly: costParts.servers.monthly + costParts.subs.monthly,
+      yearly: costParts.servers.yearly + costParts.subs.yearly,
+      count: costParts.servers.count + costParts.subs.count,
+    };
 
     // Status cards configuration
     const statusCards = [
@@ -92,37 +129,12 @@ const Index = () => {
         tone: "region" as const,
       },
       {
-        key: "trafficOverview",
-        title: t("traffic_overview"),
-        getValue: () => {
-          const data = live_data?.data?.data;
-          const online = live_data?.data?.online;
-          if (!data || !online) return "↑ 0B / ↓ 0B";
-          const onlineSet = new Set(online);
-          const values = Object.entries(data)
-            .filter(([uuid]) => onlineSet.has(uuid))
-            .map(([, node]) => node);
-          const up = values.reduce(
-            (acc, node) => acc + (node.network.totalUp || 0),
-            0,
-          );
-          const down = values.reduce(
-            (acc, node) => acc + (node.network.totalDown || 0),
-            0,
-          );
-          return `↑ ${formatBytes(up)} / ↓ ${formatBytes(down)}`;
-        },
-        visible: statusCardsVisibility.trafficOverview,
-        icon: ChartNoAxesCombined,
-        tone: "traffic" as const,
-      },
-      {
         key: "networkSpeed",
         title: t("network_speed"),
         getValue: () => {
           const data = live_data?.data?.data;
           const online = live_data?.data?.online;
-          if (!data || !online) return "↑ 0 B/s / ↓ 0 B/s";
+          if (!data || !online) return ["↑ 0 B/s", "↓ 0 B/s"];
           const onlineSet = new Set(online);
           const values = Object.entries(data)
             .filter(([uuid]) => onlineSet.has(uuid))
@@ -135,11 +147,50 @@ const Index = () => {
             (acc, node) => acc + (node.network.down || 0),
             0,
           );
-          return `↑ ${formatSpeed(up)} / ↓ ${formatSpeed(down)}`;
+          return [`↑ ${formatSpeed(up)}`, `↓ ${formatSpeed(down)}`];
         },
         visible: statusCardsVisibility.networkSpeed,
         icon: Activity,
         tone: "speed" as const,
+      },
+      {
+        key: "trafficOverview",
+        title: t("traffic_overview"),
+        getValue: () => {
+          const data = live_data?.data?.data;
+          const online = live_data?.data?.online;
+          if (!data || !online) return ["↑ 0B", "↓ 0B"];
+          const onlineSet = new Set(online);
+          const values = Object.entries(data)
+            .filter(([uuid]) => onlineSet.has(uuid))
+            .map(([, node]) => node);
+          const up = values.reduce(
+            (acc, node) => acc + (node.network.totalUp || 0),
+            0,
+          );
+          const down = values.reduce(
+            (acc, node) => acc + (node.network.totalDown || 0),
+            0,
+          );
+          return [`↑ ${formatBytes(up)}`, `↓ ${formatBytes(down)}`];
+        },
+        visible: statusCardsVisibility.trafficOverview,
+        icon: ChartNoAxesCombined,
+        tone: "traffic" as const,
+      },
+      {
+        key: "costOverview",
+        title: t("cost_overview", { defaultValue: "成本统计" }),
+        getValue: () =>
+          costSummary.count === 0
+            ? ["--/月", "--/年"]
+            : [
+                `${formatCny(costSummary.monthly)}/月`,
+                `${formatCny(costSummary.yearly)}/年`,
+              ],
+        visible: statusCardsVisibility.costOverview !== false,
+        icon: Wallet,
+        tone: "cost" as const,
       },
     ];
 
@@ -254,9 +305,9 @@ export default Index;
 type TopCardProps = {
   cardKey: string;
   title: string;
-  value: string | number;
+  value: string | number | string[];
   icon: LucideIcon;
-  tone: "time" | "online" | "region" | "traffic" | "speed";
+  tone: "time" | "online" | "region" | "traffic" | "speed" | "cost";
   showOnlineIndicator?: boolean;
 };
 
@@ -272,7 +323,17 @@ const TopCard: React.FC<TopCardProps> = React.memo(
         </div>
         <div className="summary-stat-content">
           <span className="summary-stat-label">{title}</span>
-          <span className="summary-stat-value">{value}</span>
+          {Array.isArray(value) ? (
+            <span className="summary-stat-value summary-stat-value--lines">
+              {value.map((line, i) => (
+                <span key={i} className="summary-stat-line">
+                  {line}
+                </span>
+              ))}
+            </span>
+          ) : (
+            <span className="summary-stat-value">{value}</span>
+          )}
         </div>
       </div>
     );

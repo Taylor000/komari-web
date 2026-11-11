@@ -1,6 +1,62 @@
 import { Badge, Flex } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import AutoRenewalBadge from "./AutoRenewalBadge";
+
+/** 计费周期（天）→ "月" / "年" / "N 天" 等 */
+export function formatBillingCycle(billingCycle: number, t: TFunction) {
+  if (billingCycle >= 27 && billingCycle <= 32) return t("common.monthly");
+  if (billingCycle >= 87 && billingCycle <= 95) return t("common.quarterly");
+  if (billingCycle >= 175 && billingCycle <= 185) return t("common.semi_annual");
+  if (billingCycle >= 360 && billingCycle <= 370) return t("common.annual");
+  if (billingCycle >= 720 && billingCycle <= 750) return t("common.biennial");
+  if (billingCycle >= 1080 && billingCycle <= 1150) return t("common.triennial");
+  if (billingCycle >= 1800 && billingCycle <= 1850) return t("common.quinquennial");
+  if (billingCycle == -1) return t("common.once");
+  return `${billingCycle} ${t("nodeCard.time_day")}`;
+}
+
+/** 到期信息：剩余天数文案与提醒等级 */
+export function getExpiryInfo(expiredAt: string | number, t: TFunction) {
+  const diffTime = new Date(expiredAt).getTime() - Date.now();
+  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const level: "normal" | "warning" | "critical" =
+    days <= 7 ? "critical" : days <= 15 ? "warning" : "normal";
+  const color = level === "critical" ? "red" : level === "warning" ? "orange" : "gray";
+  const label =
+    days <= 0
+      ? t("common.expired")
+      : days > 36500
+        ? t("common.long_term")
+        : t("common.expired_in", { days });
+  return { days, level, color, label } as const;
+}
+
+const tagColors = [
+  "ruby", "gray", "gold", "bronze", "brown", "yellow", "amber", "orange",
+  "tomato", "red", "crimson", "pink", "plum", "purple", "violet", "iris",
+  "indigo", "blue", "cyan", "teal", "jade", "green", "grass", "lime", "mint",
+  "sky",
+] as const;
+export type TagColor = (typeof tagColors)[number];
+
+/** 解析 "a;b<red>;c" 形式的自定义标签 */
+export function parseCustomTags(tags?: string) {
+  if (!tags) return [];
+  return tags
+    .split(";")
+    .filter((tag) => tag.trim() !== "")
+    .map((tag) => {
+      const colorMatch = tag.match(/<(\w+)>$/);
+      if (colorMatch) {
+        const color = colorMatch[1].toLowerCase();
+        if ((tagColors as readonly string[]).includes(color)) {
+          return { text: tag.replace(/<\w+>$/, ""), color: color as TagColor };
+        }
+      }
+      return { text: tag, color: null as TagColor | null };
+    });
+}
 
 const PriceTags = ({
   price = 0,
@@ -58,66 +114,17 @@ const PriceTags = ({
       <Badge color="gray" size="1" variant="soft" className="text-sm">
         <label className="text-xs">
           {price == -1 ? t("common.free") : `${currency}${price}`}/
-          {(() => {
-            if (billing_cycle >= 27 && billing_cycle <= 32) {
-              return t("common.monthly");
-            } else if (billing_cycle >= 87 && billing_cycle <= 95) {
-              return t("common.quarterly");
-            } else if (billing_cycle >= 175 && billing_cycle <= 185) {
-              return t("common.semi_annual");
-            } else if (billing_cycle >= 360 && billing_cycle <= 370) {
-              return t("common.annual");
-            } else if (billing_cycle >= 720 && billing_cycle <= 750) {
-              return t("common.biennial");
-            } else if (billing_cycle >= 1080 && billing_cycle <= 1150) {
-              return t("common.triennial");
-            } else if (billing_cycle >= 1800 && billing_cycle <= 1850) {
-              return t("common.quinquennial");
-            } else if (billing_cycle == -1) {
-              return t("common.once");
-            } else {
-              return `${billing_cycle} ${t("nodeCard.time_day")}`;
-            }
-          })()}
+          {formatBillingCycle(billing_cycle, t)}
         </label>
       </Badge>
       <Badge
-        color={(() => {
-          const expiredDate = new Date(expired_at);
-          const now = new Date();
-          const diffTime = expiredDate.getTime() - now.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          if (diffDays <= 0 || diffDays <= 7) {
-            return "red";
-          } else if (diffDays <= 15) {
-            return "orange";
-          } else {
-            return "gray";
-          }
-        })()}
+        color={getExpiryInfo(expired_at, t).color}
         size="1"
         variant="soft"
         className="text-sm"
       >
         <label className="text-xs">
-          {(() => {
-            const expiredDate = new Date(expired_at);
-            const now = new Date();
-            const diffTime = expiredDate.getTime() - now.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays <= 0) {
-              return t("common.expired");
-            } else if (diffDays > 36500) {
-              // 100 years approximately
-              return t("common.long_term");
-            } else {
-              return t("common.expired_in", {
-                days: diffDays,
-              });
-            }
-          })()}
+          {getExpiryInfo(expired_at, t).label}
         </label>
       </Badge>
       {renewalBadge}
@@ -130,81 +137,9 @@ const CustomTags = ({ tags }: { tags?: string }) => {
   if (!tags || tags.trim() === "") {
     return <></>;
   }
-  const tagList = tags.split(";").filter((tag) => tag.trim() !== "");
-  const colors: Array<
-    | "ruby"
-    | "gray"
-    | "gold"
-    | "bronze"
-    | "brown"
-    | "yellow"
-    | "amber"
-    | "orange"
-    | "tomato"
-    | "red"
-    | "crimson"
-    | "pink"
-    | "plum"
-    | "purple"
-    | "violet"
-    | "iris"
-    | "indigo"
-    | "blue"
-    | "cyan"
-    | "teal"
-    | "jade"
-    | "green"
-    | "grass"
-    | "lime"
-    | "mint"
-    | "sky"
-  > = [
-    "ruby",
-    "gray",
-    "gold",
-    "bronze",
-    "brown",
-    "yellow",
-    "amber",
-    "orange",
-    "tomato",
-    "red",
-    "crimson",
-    "pink",
-    "plum",
-    "purple",
-    "violet",
-    "iris",
-    "indigo",
-    "blue",
-    "cyan",
-    "teal",
-    "jade",
-    "green",
-    "grass",
-    "lime",
-    "mint",
-    "sky",
-  ];
-
-  // 解析带颜色的标签
-  const parseTagWithColor = (tag: string) => {
-    const colorMatch = tag.match(/<(\w+)>$/);
-    if (colorMatch) {
-      const color = colorMatch[1].toLowerCase();
-      const text = tag.replace(/<\w+>$/, "");
-      // 检查颜色是否在支持的颜色列表中
-      if (colors.includes(color as any)) {
-        return { text, color: color as (typeof colors)[number] };
-      }
-    }
-    return { text: tag, color: null };
-  };
-
   return (
     <>
-      {tagList.map((tag, index) => {
-        const { text, color } = parseTagWithColor(tag);
+      {parseCustomTags(tags).map(({ text, color }, index) => {
         const badgeColor = color || "gray";
 
         return (

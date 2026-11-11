@@ -6,6 +6,8 @@ export type Subscription = {
   currency: string;
   billing_cycle: number;
   expires_at: string;
+  /** 开通时间，未设置为 null；用于计算存续时长 */
+  started_at?: string | null;
   auto_renewal: boolean;
   visible?: boolean;
   show_price: boolean;

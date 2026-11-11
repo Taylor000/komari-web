@@ -1,4 +1,4 @@
 export const CUSTOM_THEME = {
-  color: "blue",
-  gray: "slate",
+  color: "gray",
+  gray: "gray",
 } as const;

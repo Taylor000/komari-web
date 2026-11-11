@@ -1,7 +1,9 @@
-import { Badge, Card, Flex, Text } from "@radix-ui/themes";
+import { Badge, Card, Text } from "@radix-ui/themes";
 import {
   CalendarClock,
+  CalendarPlus,
   ExternalLink,
+  Hourglass,
   ReceiptText,
   RefreshCw,
 } from "lucide-react";
@@ -9,7 +11,6 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
 import type { Subscription } from "@/types/Subscription";
-import AutoRenewalBadge from "./AutoRenewalBadge";
 import "./SubscriptionDisplay.css";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -42,6 +43,54 @@ export function formatBillingCycle(days: number, t: TFunction) {
   return knownCycles[days] || t("subscriptions.cycle.days", { count: days });
 }
 
+export type SubscriptionLifetime = {
+  /** 从开通日到今天经过的整天数 */
+  days: number;
+  /** 开通日期（YYYY/MM/DD） */
+  date: string;
+  /** 简短文案，如「已存续 1 年 32 天」 */
+  label: string;
+  /** 悬浮提示 */
+  title: string;
+};
+
+/** 按自然日拆分为「年 + 天」，满一年才显示年 */
+function formatLifetimeDays(days: number, t: TFunction) {
+  const years = Math.floor(days / 365);
+  const rest = days % 365;
+  if (years === 0) return t("subscriptions.lifetimeDays", { count: days });
+  if (rest === 0) return t("subscriptions.lifetimeYears", { years });
+  return t("subscriptions.lifetimeYearsDays", { years, days: rest });
+}
+
+/**
+ * 会员存续时长：从开通日（含当天起算）到今天，与服务器的「存续」一致，
+ * 不受续费或到期影响。未设置开通时间时返回 null。
+ */
+export function getSubscriptionLifetime(
+  startedAt: string | null | undefined,
+  t: TFunction,
+): SubscriptionLifetime | null {
+  if (!startedAt) return null;
+  const start = parseSubscriptionDate(startedAt);
+  if (Number.isNaN(start.getTime()) || start.getFullYear() < 1970) return null;
+  start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((today.getTime() - start.getTime()) / DAY_MS);
+  if (days < 0) return null;
+  const date = formatSubscriptionDate(startedAt);
+  const duration = formatLifetimeDays(days, t);
+  const label =
+    days === 0 ? t("subscriptions.startedToday") : t("subscriptions.lifetime", { duration });
+  return {
+    days,
+    date,
+    label,
+    title: t("subscriptions.lifetimeTitle", { date, duration }),
+  };
+}
+
 export function formatSubscriptionDate(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
@@ -61,78 +110,98 @@ function SubscriptionCard({ item }: { item: Subscription }) {
     : isDueSoon
       ? t("subscriptions.status.dueSoon")
       : t("subscriptions.status.active");
+  const lifetime = getSubscriptionLifetime(item.started_at, t);
   const remainingLabel = isExpired
     ? t("subscriptions.expiredDays", { count: Math.abs(remainingDays) })
     : remainingDays === 0
       ? t("subscriptions.dueToday")
       : t("subscriptions.remainingDays", { count: remainingDays });
 
+  const priceLabel =
+    item.show_price && item.price !== null
+      ? `${item.currency}${item.price.toLocaleString("zh-CN", { maximumFractionDigits: 2 })}`
+      : null;
+
   const content = (
     <Card className={`subscription-card subscription-card--${statusColor}`}>
       <div className="subscription-card-layout">
         <div className="subscription-card-header">
-          <div className="subscription-identity">
-            <span className="subscription-logo" aria-hidden="true">
-              <ReceiptText size={18} strokeWidth={1.8} />
-            </span>
-            <div className="subscription-title-copy">
-              <Text as="div" size="3" weight="bold" truncate>
+          <span className="subscription-logo" aria-hidden="true">
+            <ReceiptText size={16} strokeWidth={1.8} />
+          </span>
+          <div className="subscription-title-copy">
+            <div className="subscription-name">
+              <span className="subscription-name-text" title={item.name}>
                 {item.name}
-              </Text>
-              <Text as="div" size="1" color="gray" truncate>
+              </span>
+              {item.url && (
+                <ExternalLink size={12} className="subscription-link-icon" aria-hidden="true" />
+              )}
+            </div>
+            <div className="subscription-subline">
+              <span className="subscription-plan">
                 {item.plan || t("subscriptions.defaultPlan")}
-              </Text>
+              </span>
+              <span className="subscription-renewal">
+                {item.auto_renewal && <RefreshCw size={10} aria-hidden="true" />}
+                {item.auto_renewal
+                  ? t("subscriptions.autoRenewal")
+                  : t("subscriptions.manualRenewal")}
+              </span>
             </div>
           </div>
-          <Flex align="center" gap="2" className="subscription-card-actions">
-            <Badge color={statusColor} variant="soft" radius="full">
-              <span className="subscription-status-dot" aria-hidden="true" />
-              {statusLabel}
-            </Badge>
-            {item.url && <ExternalLink size={15} className="subscription-link-icon" />}
-          </Flex>
-        </div>
-
-        <div className="subscription-divider" />
-
-        <div className="subscription-primary-row">
-          <div>
-            <Text as="div" size="1" color="gray">
-              {t("subscriptions.cost")}
-            </Text>
-            <Text as="div" size="4" weight="bold" className="subscription-price">
-              {item.show_price && item.price !== null
-                ? `${item.currency}${item.price.toLocaleString("zh-CN", { maximumFractionDigits: 2 })}`
-                : t("subscriptions.priceHidden")}
-            </Text>
-          </div>
-          <div className="subscription-cycle-pill">
-            <RefreshCw size={13} aria-hidden="true" />
-            {formatBillingCycle(item.billing_cycle, t)}
+          <div className="subscription-price-block">
+            {priceLabel ? (
+              <span className="subscription-price">{priceLabel}</span>
+            ) : (
+              <span className="subscription-price subscription-price--hidden">
+                {t("subscriptions.priceHidden")}
+              </span>
+            )}
+            <span className="subscription-cycle">
+              {formatBillingCycle(item.billing_cycle, t)}
+            </span>
           </div>
         </div>
 
-        <div className="subscription-facts">
-          <div className="subscription-fact">
-            <span>{t("subscriptions.expiresAt")}</span>
-            <strong>{formatSubscriptionDate(item.expires_at)}</strong>
+        {lifetime ? (
+          <div className="subscription-lifetime" title={lifetime.title}>
+            <span className="subscription-lifetime-item">
+              <CalendarPlus size={12} aria-hidden="true" />
+              {t("subscriptions.startedAt")}
+              <strong>{lifetime.date}</strong>
+            </span>
+            <span className="subscription-lifetime-item subscription-lifetime-duration">
+              <Hourglass size={12} aria-hidden="true" />
+              {t("subscriptions.lifetimeLabel")}
+              <strong>
+                {lifetime.days === 0
+                  ? t("subscriptions.startedToday")
+                  : formatLifetimeDays(lifetime.days, t)}
+              </strong>
+            </span>
           </div>
-          <div className="subscription-fact">
-            <span>{t("subscriptions.renewal")}</span>
-            <strong>
-              {item.auto_renewal
-                ? t("subscriptions.autoRenewal")
-                : t("subscriptions.manualRenewal")}
-            </strong>
+        ) : (
+          <div className="subscription-lifetime subscription-lifetime--empty">
+            <span className="subscription-lifetime-item">
+              <CalendarPlus size={12} aria-hidden="true" />
+              {t("subscriptions.startedAt")}
+              <strong>{t("subscriptions.startedAtUnset")}</strong>
+            </span>
           </div>
-        </div>
+        )}
 
         <div className="subscription-card-footer">
-          <span className="subscription-remaining">
-            <CalendarClock size={15} aria-hidden="true" />
+          <span className="subscription-status">
+            <span className="subscription-status-dot" aria-hidden="true" />
+            {statusLabel}
+            <span className="subscription-status-sep" aria-hidden="true">·</span>
             {remainingLabel}
           </span>
-          <AutoRenewalBadge enabled={item.auto_renewal} />
+          <span className="subscription-expiry">
+            <CalendarClock size={12} aria-hidden="true" />
+            {formatSubscriptionDate(item.expires_at)}
+          </span>
         </div>
       </div>
     </Card>

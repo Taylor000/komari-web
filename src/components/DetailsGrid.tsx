@@ -3,6 +3,8 @@ import type { ComponentType, ReactNode } from "react";
 import { useNodeList } from "@/contexts/NodeListContext";
 import { useLiveData } from "@/contexts/LiveDataContext";
 import { formatBytes, formatUptime } from "@/utils/unitHelper";
+import { resolveLifetime } from "@/utils/lifetime";
+import { usePublicInfo } from "@/contexts/PublicInfoContext";
 import { getOSImage } from "@/utils/osImageHelper";
 import {
   Activity,
@@ -28,8 +30,10 @@ export const DetailsGrid = ({ uuid, box }: DetailsGridProps) => {
 
   const { nodeList } = useNodeList();
   const { live_data } = useLiveData();
+  const { publicInfo } = usePublicInfo();
   const node = nodeList?.find((n) => n.uuid === uuid);
   const liveRecord = live_data?.data.data[uuid];
+  const lifetime = resolveLifetime(node, publicInfo?.theme_settings, t);
   const unknown = "Unknown";
 
   const memTotal = node?.mem_total || 0;
@@ -156,6 +160,14 @@ export const DetailsGrid = ({ uuid, box }: DetailsGridProps) => {
             value={
               liveRecord?.uptime ? formatUptime(liveRecord.uptime, t) : "-"
             }
+            note={
+              lifetime
+                ? t("nodeCard.lifetimeNote", {
+                    duration: formatUptime(lifetime.seconds, t),
+                  })
+                : undefined
+            }
+            title={lifetime?.title}
           />
         </div>
       </section>
@@ -258,14 +270,16 @@ const LiveStat = ({
   label,
   value,
   note,
+  title,
 }: {
   icon: DetailIcon;
   tone: "up" | "down" | "load" | "uptime";
   label: string;
   value: string;
   note?: string;
+  title?: string;
 }) => (
-  <div className={`details-stat details-stat--${tone}`}>
+  <div className={`details-stat details-stat--${tone}`} title={title}>
     <span className="details-stat-icon" aria-hidden="true">
       <Icon size={15} strokeWidth={2.2} />
     </span>

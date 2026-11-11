@@ -152,3 +152,33 @@ export function formatUptime(seconds: number, t: TFunction): string {
 export function noWrap(text: string): string {
   return text.replace(/ /g, "\u00a0");
 }
+
+/**
+ * Seconds since the server was purchased, independent of reboots.
+ * Returns null when no purchase time is set or it lies in the future.
+ */
+export function getLifetimeSeconds(
+  purchasedAt: string | null | undefined,
+  now: number = Date.now(),
+): number | null {
+  if (!purchasedAt) return null;
+  const start = new Date(purchasedAt).getTime();
+  // Go zero time serializes as year 0001; treat anything that old as unset.
+  if (!Number.isFinite(start) || new Date(start).getFullYear() < 1970) {
+    return null;
+  }
+  const seconds = (now - start) / 1000;
+  return seconds >= 0 ? seconds : null;
+}
+
+/** Locale date-time string for a purchase timestamp, used in tooltips. */
+export function formatPurchaseDate(purchasedAt: string): string {
+  const date = new Date(purchasedAt);
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

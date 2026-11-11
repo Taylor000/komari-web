@@ -30,6 +30,28 @@
         }
       },
       {
+        "key": "showLifetimeInCard",
+        "name": {
+          "zh-CN": "显示存续时长"
+        },
+        "type": "switch",
+        "default": true,
+        "help": {
+          "zh-CN": "在服务器卡片和详情页显示从购买到现在的时长（不受重启影响）。购买时间在后台「编辑信息」或「账单」中设置。"
+        }
+      },
+      {
+        "key": "lifetimeFallbackToCreatedAt",
+        "name": {
+          "zh-CN": "未设置购买时间时按加入面板时间计算存续"
+        },
+        "type": "switch",
+        "default": true,
+        "help": {
+          "zh-CN": "关闭后，只有在后台设置了购买时间的服务器才会显示存续时长。"
+        }
+      },
+      {
         "key": "showServerListInDetails",
         "default": true,
         "type": "switch",

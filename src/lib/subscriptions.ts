@@ -37,6 +37,13 @@ export const updateSubscription = (id: number, input: SubscriptionInput) =>
     body: JSON.stringify(input),
   });
 
+export const orderSubscriptions = (ids: number[]) =>
+  request<null>("/api/admin/subscriptions/order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+
 export const deleteSubscription = (id: number) =>
   request<null>(`/api/admin/subscriptions/${id}/remove`, {
     method: "POST",

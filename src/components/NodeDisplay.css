@@ -41,7 +41,7 @@
 }
 
 .control-bar .search-box {
-  --text-field-focus-color: var(--accent-8);
+  --text-field-focus-color: var(--gray-8);
   border-radius: 0.7rem;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--surface-border), var(--surface-shadow);
@@ -97,8 +97,8 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 0.6rem;
-  color: var(--accent-11);
-  background: var(--accent-a3);
+  color: var(--gray-11);
+  background: var(--gray-a3);
 }
 
 .group-options-scroll {
@@ -177,9 +177,9 @@
 
 .expiring-summary {
   padding: 0.75rem 0.9rem;
-  border: 1px solid var(--amber-a5);
+  border: 1px solid var(--surface-border);
   border-radius: 0.9rem;
-  background: var(--amber-a2);
+  background: var(--surface);
 }
 
 .group-option-count {
@@ -199,26 +199,26 @@
 
 @media (hover: hover) and (pointer: fine) {
   .group-option:not(.is-active):hover {
-    color: var(--accent-11);
-    background: var(--accent-a3);
+    color: var(--gray-12);
+    background: var(--gray-a4);
   }
 }
 
 .group-option:focus-visible {
-  outline: 2px solid var(--accent-8);
+  outline: 2px solid var(--gray-8);
   outline-offset: 2px;
 }
 
 .group-option.is-active {
   border-color: transparent;
-  color: var(--accent-contrast);
-  background: var(--accent-9);
-  box-shadow: 0 4px 12px -4px var(--accent-a8);
+  color: var(--gray-1);
+  background: var(--gray-12);
+  box-shadow: none;
 }
 
 .group-option.is-active .group-option-count {
-  color: var(--accent-contrast);
-  background: rgb(255 255 255 / 0.22);
+  color: var(--gray-1);
+  background: color-mix(in srgb, var(--gray-1) 18%, transparent);
 }
 
 .group-summary {
@@ -260,8 +260,8 @@
   height: 0.45rem;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: var(--accent-9);
-  box-shadow: 0 0 0 3px var(--accent-a4);
+  background: var(--gray-11);
+  box-shadow: 0 0 0 3px var(--gray-a4);
 }
 
 .group-summary-metrics {

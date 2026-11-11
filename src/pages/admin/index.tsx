@@ -1632,6 +1632,13 @@ function EditButton({ node }: { node: NodeDetail }) {
   const [selectedGroup, setSelectedGroup] = useState(node.group || "");
   const [traffic_limit, setTrafficLimit] = useState(0);
   const [traffic_limit_type, setTrafficLimitType] = useState("sum");
+  const [purchasedAt, setPurchasedAt] = useState(() =>
+    toDateTimeLocalValue(node.purchased_at),
+  );
+
+  React.useEffect(() => {
+    if (open) setPurchasedAt(toDateTimeLocalValue(node.purchased_at));
+  }, [node.purchased_at, open]);
 
   React.useEffect(() => {
     setHidden(node.hidden);
@@ -1644,6 +1651,11 @@ function EditButton({ node }: { node: NodeDetail }) {
   }, [node.group, open]);
 
   const save = async () => {
+    const purchasedAtValue = toPurchasedAtPayload(purchasedAt);
+    if (purchasedAtValue === null) {
+      toast.error(t("admin.nodeTable.invalidPurchasedAt"));
+      return;
+    }
     try {
       setSaving(true);
       const response = await fetch(`/api/admin/client/${node.uuid}/edit`, {
@@ -1657,6 +1669,7 @@ function EditButton({ node }: { node: NodeDetail }) {
           hidden,
           traffic_limit,
           traffic_limit_type,
+          purchased_at: purchasedAtValue,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -1756,6 +1769,19 @@ function EditButton({ node }: { node: NodeDetail }) {
             </Select.Root>
             <Text as="div" size="1" color="gray" mt="1">
               {t("serverGroups.selectDescription")}
+            </Text>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-muted-foreground">
+              {t("admin.nodeTable.purchasedAt", "购买时间")}
+            </label>
+            <PurchasedAtField
+              value={purchasedAt}
+              onChange={setPurchasedAt}
+              createdAt={node.created_at}
+            />
+            <Text as="div" size="1" color="gray" mt="1">
+              {t("admin.nodeTable.purchasedAtTips")}
             </Text>
           </div>
           <div>
@@ -2092,6 +2118,79 @@ function DetailView({ node }: { node: NodeDetail }) {
   );
 }
 
+/** ISO timestamp -> value for <input type="datetime-local"> in browser time. */
+function toDateTimeLocalValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime()) || date.getFullYear() < 1970) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** datetime-local value -> API payload; "" clears, null means invalid. */
+function toPurchasedAtPayload(value: string): string | null {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime()) || date.getTime() > Date.now() + 60_000) {
+    return null;
+  }
+  return date.toISOString();
+}
+
+function PurchasedAtField({
+  value,
+  onChange,
+  createdAt,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  createdAt?: string;
+}) {
+  const { t } = useTranslation();
+  const createdValue = toDateTimeLocalValue(createdAt);
+  return (
+    <Flex direction="column" gap="1">
+      <TextField.Root
+        type="datetime-local"
+        step={60}
+        max={toDateTimeLocalValue(new Date().toISOString())}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <Flex gap="3" wrap="wrap" align="center">
+        <Button
+          type="button"
+          size="1"
+          variant="soft"
+          onClick={() => onChange(toDateTimeLocalValue(new Date().toISOString()))}
+        >
+          {t("admin.nodeTable.purchasedAtNow", "现在")}
+        </Button>
+        {createdValue && (
+          <Button
+            type="button"
+            size="1"
+            variant="soft"
+            onClick={() => onChange(createdValue)}
+          >
+            {t("admin.nodeTable.purchasedAtUseCreated", "使用加入面板时间")}
+          </Button>
+        )}
+        <Button
+          type="button"
+          size="1"
+          variant="soft"
+          color="gray"
+          disabled={!value}
+          onClick={() => onChange("")}
+        >
+          {t("admin.nodeTable.purchasedAtClear", "清除")}
+        </Button>
+      </Flex>
+    </Flex>
+  );
+}
+
 function BillingButton({ node }: { node: NodeDetail }) {
   const { t } = useTranslation();
   const { refresh } = useNodeDetails();
@@ -2104,6 +2203,12 @@ function BillingButton({ node }: { node: NodeDetail }) {
     node.auto_renewal || false
   );
   const [currency, setCurrency] = React.useState<string>(node.currency || "$");
+  const [purchasedAt, setPurchasedAt] = React.useState<string>(() =>
+    toDateTimeLocalValue(node.purchased_at),
+  );
+  React.useEffect(() => {
+    if (open) setPurchasedAt(toDateTimeLocalValue(node.purchased_at));
+  }, [node.purchased_at, open]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2123,8 +2228,13 @@ function BillingButton({ node }: { node: NodeDetail }) {
       );
       const expiredAtValue = (formData.get("expiredAt") as string) || "";
       const currencyValue = (formData.get("currency") as string) || "$";
+      const purchasedAtValue = toPurchasedAtPayload(purchasedAt);
+      if (purchasedAtValue === null) {
+        toast.error(t("admin.nodeTable.invalidPurchasedAt"));
+        return;
+      }
 
-      await fetch(`/api/admin/client/${node.uuid}/edit`, {
+      const res = await fetch(`/api/admin/client/${node.uuid}/edit`, {
         method: "POST",
         body: JSON.stringify({
           price,
@@ -2132,11 +2242,16 @@ function BillingButton({ node }: { node: NodeDetail }) {
           expired_at: expiredAtValue,
           currency: currencyValue,
           auto_renewal: autoRenewal,
+          purchased_at: purchasedAtValue,
         }),
         headers: {
           "Content-Type": "application/json",
         },
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || `HTTP ${res.status}`);
+      }
       refresh();
       setOpen(false);
     } catch (error) {
@@ -2233,6 +2348,17 @@ function BillingButton({ node }: { node: NodeDetail }) {
                 </Button>
               </TextField.Slot>
             </TextField.Root>
+            <label className="font-bold">
+              <label>{t("admin.nodeTable.purchasedAt")}</label>
+              <label className="text-muted-foreground text-sm ml-1 font-medium">
+                {t("admin.nodeTable.purchasedAtTips")}
+              </label>
+            </label>
+            <PurchasedAtField
+              value={purchasedAt}
+              onChange={setPurchasedAt}
+              createdAt={node.created_at}
+            />
             <Flex gap="2" align="center"></Flex>
             <SettingCardSwitch
               title={t("admin.nodeTable.autoRenewal")}

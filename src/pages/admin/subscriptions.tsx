@@ -13,8 +13,10 @@ import {
 } from "@radix-ui/themes";
 import {
   CalendarClock,
+  CalendarPlus,
   Eye,
   EyeOff,
+  GripVertical,
   Pencil,
   Plus,
   ReceiptText,
@@ -22,12 +24,31 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import Loading from "@/components/loading";
 import {
   createSubscription,
   deleteSubscription,
   fetchAdminSubscriptions,
+  orderSubscriptions,
   updateSubscription,
 } from "@/lib/subscriptions";
 import type { Subscription, SubscriptionInput } from "@/types/Subscription";
@@ -35,11 +56,15 @@ import {
   formatBillingCycle,
   formatSubscriptionDate,
   getRemainingDays,
+  getSubscriptionLifetime,
 } from "@/components/SubscriptionDisplay";
 import "./subscriptions.css";
 
-const toDateInput = (value: string | Date) => {
+const toDateInput = (value: string | Date | null | undefined) => {
+  if (!value) return "";
   const date = new Date(value);
+  // Unset dates come back as null; very old years are Go zero-time leftovers.
+  if (Number.isNaN(date.getTime()) || date.getFullYear() < 1970) return "";
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -56,6 +81,7 @@ const createEmptyInput = (): SubscriptionInput => {
     currency: "¥",
     billing_cycle: 30,
     expires_at: toDateInput(expiresAt),
+    started_at: toDateInput(new Date()),
     auto_renewal: true,
     visible: true,
     show_price: true,
@@ -71,6 +97,7 @@ const toInput = (item: Subscription): SubscriptionInput => ({
   currency: item.currency,
   billing_cycle: item.billing_cycle,
   expires_at: toDateInput(item.expires_at),
+  started_at: toDateInput(item.started_at),
   auto_renewal: item.auto_renewal,
   visible: item.visible ?? true,
   show_price: item.show_price,
@@ -115,6 +142,10 @@ function SubscriptionDialog({
     }
     if (!form.expires_at) {
       toast.error(t("subscriptions.validation.dateRequired"));
+      return;
+    }
+    if (form.started_at && form.started_at > toDateInput(new Date())) {
+      toast.error(t("subscriptions.validation.startedInFuture"));
       return;
     }
     setSaving(true);
@@ -224,6 +255,39 @@ function SubscriptionDialog({
           </div>
 
           <div className="subscription-form-field">
+            <FieldLabel>{t("subscriptions.startedAt")}</FieldLabel>
+            <TextField.Root
+              type="date"
+              value={form.started_at ?? ""}
+              max={toDateInput(new Date())}
+              onChange={(event) => set("started_at", event.target.value)}
+            >
+              <TextField.Slot side="right">
+                {form.started_at ? (
+                  <Button
+                    type="button"
+                    size="1"
+                    variant="ghost"
+                    color="gray"
+                    onClick={() => set("started_at", "")}
+                  >
+                    {t("subscriptions.startedAtClear")}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="1"
+                    variant="ghost"
+                    onClick={() => set("started_at", toDateInput(new Date()))}
+                  >
+                    {t("subscriptions.startedAtToday")}
+                  </Button>
+                )}
+              </TextField.Slot>
+            </TextField.Root>
+            <Text size="1" color="gray">{t("subscriptions.startedAtHelp")}</Text>
+          </div>
+          <div className="subscription-form-field">
             <FieldLabel required>{t("subscriptions.expiresAt")}</FieldLabel>
             <TextField.Root
               type="date"
@@ -231,7 +295,7 @@ function SubscriptionDialog({
               onChange={(event) => set("expires_at", event.target.value)}
             />
           </div>
-          <div className="subscription-form-field">
+          <div className="subscription-form-field subscription-form-full">
             <FieldLabel>{t("subscriptions.url")}</FieldLabel>
             <TextField.Root
               type="url"
@@ -339,12 +403,43 @@ function DeleteDialog({ item, onDeleted }: { item: Subscription; onDeleted: () =
   );
 }
 
-function AdminSubscriptionCard({ item, refresh }: { item: Subscription; refresh: () => Promise<void> }) {
+function AdminSubscriptionCard({
+  item,
+  refresh,
+  canDrag,
+}: {
+  item: Subscription;
+  refresh: () => Promise<void>;
+  canDrag: boolean;
+}) {
   const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id, disabled: !canDrag });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
   const days = getRemainingDays(item.expires_at);
   const color = days < 0 ? "red" : days <= 7 ? "orange" : "green";
+  const lifetime = getSubscriptionLifetime(item.started_at, t);
   return (
-    <div className="admin-subscription-card">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`admin-subscription-card${isDragging ? " is-dragging" : ""}`}
+    >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        className="admin-subscription-handle"
+        disabled={!canDrag}
+        aria-label={t("subscriptions.dragToReorder")}
+        title={t("subscriptions.dragToReorder")}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={16} />
+      </button>
       <div className="admin-subscription-icon" aria-hidden="true"><ReceiptText size={20} /></div>
       <div className="admin-subscription-main">
         <Flex align="center" gap="2" wrap="wrap">
@@ -361,6 +456,9 @@ function AdminSubscriptionCard({ item, refresh }: { item: Subscription; refresh:
           {item.plan || t("subscriptions.defaultPlan")} · {item.currency}{item.price?.toLocaleString("zh-CN")} / {formatBillingCycle(item.billing_cycle, t)}
         </Text>
         <Flex gap="3" mt="2" wrap="wrap" className="admin-subscription-meta">
+          {lifetime && (
+            <span title={lifetime.title}><CalendarPlus size={14} />{t("subscriptions.startedAt")} {lifetime.date} · {lifetime.label}</span>
+          )}
           <span><CalendarClock size={14} />{t("subscriptions.expiresAt")} {formatSubscriptionDate(item.expires_at)}</span>
           <span>{item.auto_renewal ? t("subscriptions.autoRenewal") : t("subscriptions.manualRenewal")}</span>
           {!item.show_price && <span>{t("subscriptions.priceHidden")}</span>}
@@ -393,6 +491,36 @@ export default function SubscriptionsPage() {
 
   React.useEffect(() => { void refresh(); }, [refresh]);
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    // 移动端长按 200ms 再拖拽，避免和页面滚动冲突
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const [savingOrder, setSavingOrder] = React.useState(false);
+
+  const handleDragEnd = async ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const previous = items;
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    setItems(reordered);
+    setSavingOrder(true);
+    try {
+      await orderSubscriptions(reordered.map((item) => item.id));
+      toast.success(t("subscriptions.orderSaved"));
+    } catch (err) {
+      setItems(previous);
+      toast.error(err instanceof Error ? err.message : String(err));
+      // 列表在别处被改动时（409），重新拉取以对齐服务端
+      void refresh();
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
   if (loading) return <Loading text="" />;
 
   return (
@@ -413,9 +541,31 @@ export default function SubscriptionsPage() {
       )}
 
       {items.length > 0 ? (
-        <div className="admin-subscription-list">
-          {items.map((item) => <AdminSubscriptionCard key={item.id} item={item} refresh={refresh} />)}
-        </div>
+        <>
+          {items.length > 1 && (
+            <Text size="1" color="gray" className="admin-subscription-order-hint">
+              {t("subscriptions.orderHint")}
+            </Text>
+          )}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => void handleDragEnd(event)}
+          >
+            <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
+              <div className="admin-subscription-list">
+                {items.map((item) => (
+                  <AdminSubscriptionCard
+                    key={item.id}
+                    item={item}
+                    refresh={refresh}
+                    canDrag={items.length > 1 && !savingOrder}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </>
       ) : !error ? (
         <div className="admin-subscription-empty">
           <span className="admin-subscription-empty-icon"><ReceiptText size={26} /></span>

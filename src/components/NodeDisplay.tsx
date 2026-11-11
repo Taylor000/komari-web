@@ -385,20 +385,20 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
             <div className="group-summary-metrics">
               <div className="group-summary-metric">
                 <Text size="1" color="gray">
-                  {t("nodeCard.totalTraffic")}
-                </Text>
-                <Text size="2" weight="medium" className="whitespace-nowrap">
-                  ↑ {formatBytes(selectedGroupStats.totalUp)} / ↓{" "}
-                  {formatBytes(selectedGroupStats.totalDown)}
-                </Text>
-              </div>
-              <div className="group-summary-metric">
-                <Text size="1" color="gray">
                   {t("network_speed")}
                 </Text>
                 <Text size="2" weight="medium" className="whitespace-nowrap">
                   ↑ {formatSpeed(selectedGroupStats.up)} / ↓{" "}
                   {formatSpeed(selectedGroupStats.down)}
+                </Text>
+              </div>
+              <div className="group-summary-metric">
+                <Text size="1" color="gray">
+                  {t("nodeCard.totalTraffic")}
+                </Text>
+                <Text size="2" weight="medium" className="whitespace-nowrap">
+                  ↑ {formatBytes(selectedGroupStats.totalUp)} / ↓{" "}
+                  {formatBytes(selectedGroupStats.totalDown)}
                 </Text>
               </div>
             </div>
@@ -460,6 +460,8 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
                   <IconButton
                     variant={viewMode === "grid" ? "solid" : "soft"}
                     onClick={() => setViewMode("grid")}
+                    color="gray"
+                    highContrast
                     className="transition-colors view-switch-button"
                     aria-label={t("view.grid")}
                   >
@@ -468,6 +470,8 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
                   <IconButton
                     variant={viewMode === "table" ? "solid" : "soft"}
                     onClick={() => setViewMode("table")}
+                    color="gray"
+                    highContrast
                     className="transition-colors view-switch-button"
                     aria-label={t("view.table")}
                   >
@@ -501,7 +505,9 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
                 <IconButton
                   variant={viewMode === "grid" ? "solid" : "soft"}
                   onClick={() => setViewMode("grid")}
-                  className="transition-colors view-switch-button"
+                  color="gray"
+                    highContrast
+                    className="transition-colors view-switch-button"
                   aria-label={t("view.grid")}
                 >
                   <Grid3X3 size={16} />
@@ -509,7 +515,9 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({ nodes, liveData }) => {
                 <IconButton
                   variant={viewMode === "table" ? "solid" : "soft"}
                   onClick={() => setViewMode("table")}
-                  className="transition-colors view-switch-button"
+                  color="gray"
+                    highContrast
+                    className="transition-colors view-switch-button"
                   aria-label={t("view.table")}
                 >
                   <Table2 size={16} />
