@@ -55,7 +55,10 @@ export const DetailsGrid = ({ uuid, box }: DetailsGridProps) => {
         ? t("nodeCard.cores", { count: node.cpu_cores })
         : undefined,
     },
-    { label: "GPU", value: node?.gpu_name || unknown },
+    // 没有 GPU 的机器不显示这一行，避免一行无意义的 Unknown
+    ...(node?.gpu_name && !/^(none|unknown|n\/a)$/i.test(node.gpu_name.trim())
+      ? [{ label: "GPU", value: node.gpu_name }]
+      : []),
     { label: t("nodeCard.ram"), value: formatBytes(memTotal) },
     { label: t("nodeCard.swap"), value: formatBytes(swapTotal) },
     { label: t("nodeCard.disk"), value: formatBytes(diskTotal) },

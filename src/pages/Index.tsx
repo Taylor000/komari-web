@@ -217,7 +217,10 @@ const Index = () => {
           className="global-summary mx-4"
           aria-label={t("global_overview", { defaultValue: "全局概览" })}
         >
-          <div className="summary-stat-grid">
+          <div
+            className="summary-stat-grid"
+            data-count={statusCards.filter((card) => card.visible).length}
+          >
             {statusCards
               .filter((card) => card.visible)
               .map((card) => (
