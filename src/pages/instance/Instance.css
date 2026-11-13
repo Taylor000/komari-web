@@ -756,7 +756,31 @@
 }
 
 .instance-ping-card {
-  padding: 0.9rem 1rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem 0.6rem !important;
+}
+
+/* 延迟图默认是 aspect-video，整宽时会非常高；改为固定的紧凑高度 */
+.instance-ping-card [data-slot="chart"] {
+  height: clamp(13rem, 28vw, 17.5rem);
+  aspect-ratio: auto;
+}
+
+.instance-ping-card .recharts-legend-wrapper {
+  font-size: 0.72rem;
+}
+
+.instance-ping-controls {
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--gray-a3);
+}
+
+@media (max-width: 640px) {
+  .instance-ping-card [data-slot="chart"] {
+    height: 12rem;
+  }
 }
 
 .instance-main .rt-Card {

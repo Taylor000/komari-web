@@ -534,7 +534,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
       )}
       <Card className="instance-ping-card w-full">
         {chartData.length === 0 ? (
-          <div className="w-full h-40 flex items-center justify-center text-muted-foreground">
+          <div className="w-full h-32 flex items-center justify-center text-muted-foreground">
             {t("common.none")}
           </div>
         ) : (
@@ -586,7 +586,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
                       stroke={colors[idx % colors.length]}
                       dot={false}
                       isAnimationActive={false}
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       connectNulls={connect}
                       type={cutPeak ? "basis" : "linear"}
                       hide={!!hiddenLines[String(task.id)]}
@@ -599,7 +599,7 @@ const PingChart = ({ uuid }: { uuid: string }) => {
         )}
         {/* Cut Peak 开关和显示/隐藏所有按钮 */}
         <div
-          className="flex items-center justify-between gap-4"
+          className="instance-ping-controls flex items-center justify-between gap-4"
           style={{ display: loading ? "none" : "flex" }}
         >
           <div className="flex items-center gap-2">
@@ -622,18 +622,18 @@ const PingChart = ({ uuid }: { uuid: string }) => {
           </div>
           <Button
             variant="soft"
-            size="2"
+            size="1"
             onClick={toggleAllLines}
             className="flex items-center gap-2"
           >
             {tasks.every((task) => hiddenLines[String(task.id)]) ? (
               <>
-                <Eye size={16} />
+                <Eye size={14} />
                 {t("chart.showAll")}
               </>
             ) : (
               <>
-                <EyeOff size={16} />
+                <EyeOff size={14} />
                 {t("chart.hideAll")}
               </>
             )}
