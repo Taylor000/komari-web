@@ -221,6 +221,19 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
       </div>
     );
   };
+  // 双序列卡片的数值行：前面加对应曲线颜色的小圆点，便于对照
+  const SeriesValue = ({
+    color,
+    children,
+  }: {
+    color: string;
+    children: React.ReactNode;
+  }) => (
+    <span className="chart-card-series">
+      <i style={{ backgroundColor: color }} />
+      {children}
+    </span>
+  );
   const minute = 60;
   const hour = minute * 60;
   // 限制实时模式的数据点数量，避免长时间运行时数据无限增长
@@ -348,20 +361,20 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           {ChartTitle(
             t("nodeCard.ram"),
             <Flex gap="0" direction="column" align="end">
-              <label>
+              <SeriesValue color={primaryColor}>
                 {live_data?.ram?.used
                   ? `${formatBytes(live_data.ram.used)} / ${formatBytes(
                       node?.mem_total || 0
                     )}`
                   : "-"}
-              </label>
-              <label>
+              </SeriesValue>
+              <SeriesValue color={secondaryColor}>
                 {live_data?.swap?.used
                   ? `${formatBytes(live_data.swap.used)} / ${formatBytes(
                       node?.swap_total || 0
                     )}`
                   : "-"}
-              </label>
+              </SeriesValue>
             </Flex>
           )}
           <ChartContainer
@@ -530,14 +543,12 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           {ChartTitle(
             t("nodeCard.networkSpeed"),
             <Flex gap="0" align="end" direction="column">
-              <span>
-                ↑ {formatBytes(live_data?.network.up || 0)}
-                /s
-              </span>
-              <span>
-                ↓ {formatBytes(live_data?.network.down || 0)}
-                /s
-              </span>
+              <SeriesValue color={colors[3]}>
+                ↑ {formatBytes(live_data?.network.up || 0)}/s
+              </SeriesValue>
+              <SeriesValue color={primaryColor}>
+                ↓ {formatBytes(live_data?.network.down || 0)}/s
+              </SeriesValue>
             </Flex>
           )}
           <ChartContainer
@@ -606,8 +617,12 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
           {ChartTitle(
             t("chart.connections"),
             <Flex gap="0" align="end" direction="column">
-              <span>TCP: {live_data?.connections.tcp}</span>
-              <span>UDP: {live_data?.connections.udp}</span>
+              <SeriesValue color={primaryColor}>
+                TCP {live_data?.connections?.tcp ?? "-"}
+              </SeriesValue>
+              <SeriesValue color={colors[3]}>
+                UDP {live_data?.connections?.udp ?? "-"}
+              </SeriesValue>
             </Flex>
           )}
           <ChartContainer
@@ -672,7 +687,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
         </Card>
         {/* Process */}
         <Card className={cn}>
-          {ChartTitle(t("chart.process"), live_data?.process)}
+          {ChartTitle(t("chart.process"), live_data?.process ?? "-")}
           <ChartContainer
             config={{
               process: {
@@ -693,7 +708,7 @@ const LoadChart = ({ data = [] }: LoadChartProps) => {
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                domain={[0, 100]}
+                domain={[0, "auto"]}
                 tickFormatter={(value, index) =>
                   index !== 0 ? `${value}` : ""
                 }
